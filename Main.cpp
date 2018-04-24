@@ -4,6 +4,7 @@
 
 constexpr int k_backbufferWidth = 1280;
 constexpr int k_backbufferHeight = 720;
+constexpr wchar_t k_windowName[] = L"DemoWindow";
 
 static HWND g_wndHandle = nullptr;
 static std::vector<float> g_backbufferHdr;
@@ -26,32 +27,33 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 void InitDemo(HINSTANCE instanceHandle, int show)
 {
 	WNDCLASS desc;
-	desc.style = CS_HREDRAW | CS_VREDRAW;
-	desc.lpfnWndProc = WndProc;
-	desc.cbClsExtra = 0;
-	desc.cbWndExtra = 0;
-	desc.hInstance = instanceHandle;
-	desc.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
-	desc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	desc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW);
-	desc.lpszMenuName = nullptr;
-	desc.lpszClassName = L"CPURayTracer";
-
+	desc.style = CS_HREDRAW | CS_VREDRAW;				
+	desc.lpfnWndProc = WndProc;							
+	desc.cbClsExtra = 0;								
+	desc.cbWndExtra = 0;								
+	desc.hInstance = instanceHandle;					
+	desc.hIcon = LoadIcon(nullptr, IDI_APPLICATION);	
+	desc.hCursor = LoadCursor(nullptr, IDC_ARROW);		
+	desc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW); 
+	desc.lpszMenuName = nullptr;						
+	desc.lpszClassName = k_windowName;
 	RegisterClass(&desc);
 
 	g_wndHandle = CreateWindow(
-		L"DemoWindow",
-		L"CPURayTracer",
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		k_backbufferWidth,
-		k_backbufferHeight,
-		nullptr,
-		nullptr,
-		instanceHandle,
-		nullptr
+		k_windowName,
+		L"Raytracing Demo",									
+		WS_OVERLAPPEDWINDOW,							
+		CW_USEDEFAULT,									
+		CW_USEDEFAULT,									
+		k_backbufferWidth,								
+		k_backbufferHeight,								
+		nullptr,										
+		nullptr,										
+		instanceHandle,									
+		nullptr											
 	);
+
+	assert(g_wndHandle != nullptr && L"Failed to create window");
 
 	InitBackbufferBitmap();
 
@@ -109,6 +111,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 void InitBackbufferBitmap()
 {
+	g_backbufferHdr.resize(k_backbufferWidth * k_backbufferHeight * 4);
+	std::fill(g_backbufferHdr.begin(), g_backbufferHdr.end(), 0.f);
+
+	g_backbufferLdr.resize(k_backbufferWidth * k_backbufferHeight);
+	std::fill(g_backbufferLdr.begin(), g_backbufferLdr.end(), 0);
+
 	BITMAPINFO bmi;
 	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	bmi.bmiHeader.biWidth = k_backbufferWidth;
@@ -120,12 +128,6 @@ void InitBackbufferBitmap()
 	HDC hdc = CreateCompatibleDC(GetDC(nullptr));
 
 	g_backbufferBitmap = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, reinterpret_cast<void**>(&g_backbufferLdr.at(0)), nullptr, 0x0);
-
-	g_backbufferHdr.reserve(k_backbufferWidth * k_backbufferHeight * 4);
-	std::fill(g_backbufferHdr.begin(), g_backbufferHdr.end(), 0.f);
-
-	g_backbufferLdr.reserve(k_backbufferWidth * k_backbufferHeight);
-	std::fill(g_backbufferLdr.begin(), g_backbufferLdr.end(), 0);
 }
 
 void DrawBitmap(HDC dc, int width, int height)
