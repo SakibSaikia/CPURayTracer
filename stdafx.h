@@ -1,11 +1,12 @@
 #pragma once
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <iostream>
-#include <cstdlib>
-#include <cstdint>
-#include <string>
-#include <memory>
-#include <vector>
 #include <algorithm>
+#include <assert.h>
+#include <cstdint>
+#include <cstdlib>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
+#include <windows.h>
