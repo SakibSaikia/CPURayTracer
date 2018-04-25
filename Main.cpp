@@ -93,6 +93,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		HDC hdc = BeginPaint(hWnd, &ps);
 		GetClientRect(hWnd, &rect);
 		DrawBitmap(hdc, rect.right, rect.bottom);
+		EndPaint(hWnd, &ps);
 	}
 	return 0;
 	case WM_KEYDOWN:
@@ -112,7 +113,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 void InitBackbufferBitmap()
 {
 	g_backbufferHdr.resize(k_backbufferWidth * k_backbufferHeight * 4);
-	std::fill(g_backbufferHdr.begin(), g_backbufferHdr.end(), 0.f);
+	std::fill(g_backbufferHdr.begin(), g_backbufferHdr.end(), 1.f);
 
 	g_backbufferLdr.resize(k_backbufferWidth * k_backbufferHeight);
 	std::fill(g_backbufferLdr.begin(), g_backbufferLdr.end(), 0);
@@ -125,21 +126,22 @@ void InitBackbufferBitmap()
 	bmi.bmiHeader.biBitCount = 32;
 	bmi.bmiHeader.biCompression = BI_RGB;
 	bmi.bmiHeader.biSizeImage = k_backbufferWidth * k_backbufferHeight * 4;
-	HDC hdc = CreateCompatibleDC(GetDC(nullptr));
+	HDC hdc = CreateCompatibleDC(GetDC(0));
 
 	g_backbufferBitmap = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, reinterpret_cast<void**>(&g_backbufferLdr.at(0)), nullptr, 0x0);
+	assert(g_backbufferBitmap != nullptr && L"Failed to create backbuffer bitmap");
 }
 
 void DrawBitmap(HDC dc, int width, int height)
 {
 	std::generate(g_backbufferLdr.begin(), g_backbufferLdr.end(), 
-		[src = g_backbufferHdr.data()]() mutable
+		[src = g_backbufferHdr.begin()]() mutable
 		{
-			auto r = std::min<uint32_t>(static_cast<uint32_t>(src[0] * 255.9f), 255u);
-			auto g = std::min<uint32_t>(static_cast<uint32_t>(src[1] * 255.9f), 255u);
-			auto b = std::min<uint32_t>(static_cast<uint32_t>(src[2] * 255.9f), 255u);
+			auto r = std::min<uint32_t>(static_cast<uint32_t>(*src++ * 255.9f), 255u);
+			auto g = std::min<uint32_t>(static_cast<uint32_t>(*src++ * 255.9f), 255u);
+			auto b = std::min<uint32_t>(static_cast<uint32_t>(*src++ * 255.9f), 255u);
 
-			src += 4;
+			src++;
 
 			return b | (g << 8) | (r << 16);
 		});
