@@ -1,21 +1,26 @@
-// GDI code adapted from https://github.com/aras-p/ToyPathTracer
-
 #include "stdafx.h"
+#pragma comment(lib, "d2d1")
 
 constexpr int k_backbufferWidth = 1280;
 constexpr int k_backbufferHeight = 720;
 constexpr wchar_t k_windowName[] = L"DemoWindow";
 
-static HWND g_wndHandle = nullptr;
-static std::vector<float> g_backbufferHdr;
-static std::vector<uint32_t> g_backbufferLdr;
-static HBITMAP g_backbufferBitmap;
+namespace
+{
+	HWND g_wndHandle = nullptr;
+	bool g_initialized = false;
+	std::vector<float> g_backbufferHdr;
+	std::vector<uint32_t> g_backbufferLdr;
+	Microsoft::WRL::ComPtr<ID2D1Factory> g_factory;
+	Microsoft::WRL::ComPtr<ID2D1Bitmap> g_backbufferBitmap;
+	Microsoft::WRL::ComPtr<ID2D1HwndRenderTarget> g_renderTarget;
+}
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 void InitDemo(HINSTANCE instanceHandle, int show);
 int Run();
 void InitBackbufferBitmap();
-void DrawBitmap(HDC dc, int width, int height);
+void DrawBitmap();
 
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
@@ -86,15 +91,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
 	{
-	case WM_PAINT:
+	case WM_CREATE:
 	{
-		PAINTSTRUCT ps;
-		RECT rect;
-		HDC hdc = BeginPaint(hWnd, &ps);
-		GetClientRect(hWnd, &rect);
-		DrawBitmap(hdc, rect.right, rect.bottom);
-		EndPaint(hWnd, &ps);
+		HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, g_factory.GetAddressOf());
+		assert(hr == S_OK);
 	}
+	case WM_PAINT:
+		if (g_initialized)
+		{
+			PAINTSTRUCT ps;
+			HDC hdc = BeginPaint(hWnd, &ps);
+
+			g_renderTarget->BeginDraw();
+			g_renderTarget->Clear(D2D1::ColorF(D2D1::ColorF::SkyBlue));
+			DrawBitmap();
+			g_renderTarget->EndDraw();
+
+			EndPaint(hWnd, &ps);
+		}
 	return 0;
 	case WM_KEYDOWN:
 		if (wParam == VK_ESCAPE)
@@ -112,27 +126,47 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 void InitBackbufferBitmap()
 {
+	// Factory
+	HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, g_factory.GetAddressOf());
+	assert(hr == S_OK);
+
+	// Render target
+	RECT rc;
+	GetClientRect(g_wndHandle, &rc);
+
+	D2D1_SIZE_U size = D2D1::SizeU(rc.right, rc.bottom);
+
+	hr = g_factory->CreateHwndRenderTarget(
+		D2D1::RenderTargetProperties(),
+		D2D1::HwndRenderTargetProperties(g_wndHandle, size),
+		g_renderTarget.GetAddressOf()
+	);
+
+	assert(hr == S_OK);
+
+	// Bitmap
+	FLOAT dpiX, dpiY;
+	g_factory->GetDesktopDpi(&dpiX, &dpiY);
+
+	D2D1_BITMAP_PROPERTIES desc = {};
+	desc.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	desc.pixelFormat.alphaMode = D2D1_ALPHA_MODE_IGNORE;
+	desc.dpiX = dpiX;
+	desc.dpiY = dpiY;
+
+	hr = g_renderTarget->CreateBitmap(size, desc, g_backbufferBitmap.GetAddressOf());
+	assert(hr == S_OK);
+
 	g_backbufferHdr.resize(k_backbufferWidth * k_backbufferHeight * 4);
-	std::fill(g_backbufferHdr.begin(), g_backbufferHdr.end(), 1.f);
+	std::fill(g_backbufferHdr.begin(), g_backbufferHdr.end(), 0.f);
 
 	g_backbufferLdr.resize(k_backbufferWidth * k_backbufferHeight);
 	std::fill(g_backbufferLdr.begin(), g_backbufferLdr.end(), 0);
 
-	BITMAPINFO bmi;
-	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bmi.bmiHeader.biWidth = k_backbufferWidth;
-	bmi.bmiHeader.biHeight = k_backbufferHeight;
-	bmi.bmiHeader.biPlanes = 1;
-	bmi.bmiHeader.biBitCount = 32;
-	bmi.bmiHeader.biCompression = BI_RGB;
-	bmi.bmiHeader.biSizeImage = k_backbufferWidth * k_backbufferHeight * 4;
-	HDC hdc = CreateCompatibleDC(GetDC(0));
-
-	g_backbufferBitmap = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, reinterpret_cast<void**>(&g_backbufferLdr.at(0)), nullptr, 0x0);
-	assert(g_backbufferBitmap != nullptr && L"Failed to create backbuffer bitmap");
+	g_initialized = true;
 }
 
-void DrawBitmap(HDC dc, int width, int height)
+void DrawBitmap()
 {
 	std::generate(g_backbufferLdr.begin(), g_backbufferLdr.end(), 
 		[src = g_backbufferHdr.begin()]() mutable
@@ -146,10 +180,7 @@ void DrawBitmap(HDC dc, int width, int height)
 			return b | (g << 8) | (r << 16);
 		});
 
+	g_backbufferBitmap->CopyFromMemory(nullptr, g_backbufferLdr.data(), sizeof(uint32_t) * k_backbufferWidth);
 
-	HDC srcDC = CreateCompatibleDC(dc);
-	SetStretchBltMode(dc, COLORONCOLOR);
-	SelectObject(srcDC, g_backbufferBitmap);
-	StretchBlt(dc, 0, 0, width, height, srcDC, 0, 0, k_backbufferWidth, k_backbufferHeight, SRCCOPY);
-	DeleteObject(srcDC);
+	g_renderTarget->DrawBitmap(g_backbufferBitmap.Get());
 }

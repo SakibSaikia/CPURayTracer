@@ -9,4 +9,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+
 #include <windows.h>
+#include <d2d1.h>
+#include <wrl.h>
