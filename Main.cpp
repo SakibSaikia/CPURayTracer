@@ -9,8 +9,8 @@ namespace
 {
 	HWND g_wndHandle = nullptr;
 	bool g_initialized = false;
-	std::vector<float> g_backbufferHdr;
-	std::vector<uint32_t> g_backbufferLdr;
+	std::vector<DirectX::XMFLOAT3> g_backbufferHdr;
+	std::vector<DirectX::PackedVector::XMCOLOR> g_backbufferLdr;
 	Microsoft::WRL::ComPtr<ID2D1Factory> g_factory;
 	Microsoft::WRL::ComPtr<ID2D1Bitmap> g_backbufferBitmap;
 	Microsoft::WRL::ComPtr<ID2D1HwndRenderTarget> g_renderTarget;
@@ -157,8 +157,8 @@ void InitBackbufferBitmap()
 	hr = g_renderTarget->CreateBitmap(size, desc, g_backbufferBitmap.GetAddressOf());
 	assert(hr == S_OK);
 
-	g_backbufferHdr.resize(k_backbufferWidth * k_backbufferHeight * 4);
-	std::fill(g_backbufferHdr.begin(), g_backbufferHdr.end(), 0.f);
+	g_backbufferHdr.resize(k_backbufferWidth * k_backbufferHeight);
+	std::fill(g_backbufferHdr.begin(), g_backbufferHdr.end(), DirectX::XMFLOAT3(0.f,0.f,0.f));
 
 	g_backbufferLdr.resize(k_backbufferWidth * k_backbufferHeight);
 	std::fill(g_backbufferLdr.begin(), g_backbufferLdr.end(), 0);
@@ -168,19 +168,17 @@ void InitBackbufferBitmap()
 
 void DrawBitmap()
 {
-	std::generate(g_backbufferLdr.begin(), g_backbufferLdr.end(), 
-		[src = g_backbufferHdr.begin()]() mutable
+	std::transform(g_backbufferHdr.cbegin(), g_backbufferHdr.cend(), g_backbufferLdr.begin(),
+		[](const DirectX::XMFLOAT3& hdrColor) -> DirectX::PackedVector::XMCOLOR
 		{
-			auto r = std::min<uint32_t>(static_cast<uint32_t>(*src++ * 255.9f), 255u);
-			auto g = std::min<uint32_t>(static_cast<uint32_t>(*src++ * 255.9f), 255u);
-			auto b = std::min<uint32_t>(static_cast<uint32_t>(*src++ * 255.9f), 255u);
-
-			src++;
+			auto r = std::min<uint32_t>(static_cast<uint32_t>(hdrColor.x * 255.9f), 255u);
+			auto g = std::min<uint32_t>(static_cast<uint32_t>(hdrColor.y * 255.9f), 255u);
+			auto b = std::min<uint32_t>(static_cast<uint32_t>(hdrColor.z * 255.9f), 255u);
 
 			return b | (g << 8) | (r << 16);
 		});
 
-	g_backbufferBitmap->CopyFromMemory(nullptr, g_backbufferLdr.data(), sizeof(uint32_t) * k_backbufferWidth);
+	g_backbufferBitmap->CopyFromMemory(nullptr, g_backbufferLdr.data(), sizeof(g_backbufferLdr[0]) * k_backbufferWidth);
 
 	g_renderTarget->DrawBitmap(g_backbufferBitmap.Get());
 }

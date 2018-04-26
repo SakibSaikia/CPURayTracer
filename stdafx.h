@@ -12,4 +12,6 @@
 
 #include <windows.h>
 #include <d2d1.h>
+#include <DirectXMath.h>
+#include <DirectXPackedVector.h>
 #include <wrl.h>
