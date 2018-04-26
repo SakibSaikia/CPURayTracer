@@ -57,10 +57,10 @@ void RayTracingApp::InitDirect2D(HWND hWnd)
 
 void RayTracingApp::InitBuffers()
 {
-	m_backbufferHdr.resize(k_backbufferWidth * k_backbufferHeight);
+	m_backbufferHdr.resize(AppSettings::k_backbufferWidth * AppSettings::k_backbufferHeight);
 	std::fill(m_backbufferHdr.begin(), m_backbufferHdr.end(), DirectX::XMFLOAT3(0.f, 0.f, 0.f));
 
-	m_backbufferLdr.resize(k_backbufferWidth * k_backbufferHeight);
+	m_backbufferLdr.resize(AppSettings::k_backbufferWidth * AppSettings::k_backbufferHeight);
 	std::fill(m_backbufferLdr.begin(), m_backbufferLdr.end(), 0);
 }
 
@@ -76,7 +76,7 @@ void RayTracingApp::DrawBitmap()
 		return b | (g << 8) | (r << 16);
 	});
 
-	m_backbufferBitmap->CopyFromMemory(nullptr, m_backbufferLdr.data(), sizeof(m_backbufferLdr[0]) * k_backbufferWidth);
+	m_backbufferBitmap->CopyFromMemory(nullptr, m_backbufferLdr.data(), sizeof(m_backbufferLdr[0]) * AppSettings::k_backbufferWidth);
 
 	m_renderTarget->DrawBitmap(m_backbufferBitmap.Get());
 }

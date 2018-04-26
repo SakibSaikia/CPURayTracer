@@ -2,10 +2,10 @@
 
 #pragma comment(lib, "d2d1")
 
-constexpr wchar_t k_windowName[] = L"AppWindow";
-
 namespace
 {
+	constexpr wchar_t k_windowName[] = L"AppWindow";
+
 	HWND g_wndHandle = nullptr;
 	bool g_initialized = false;
 	RayTracingApp g_app;
@@ -39,12 +39,12 @@ void InitWindow(HINSTANCE instanceHandle, int show)
 
 	g_wndHandle = CreateWindow(
 		k_windowName,
-		L"Raytracing Demo",									
+		L"Demo",									
 		WS_OVERLAPPEDWINDOW,							
 		CW_USEDEFAULT,									
 		CW_USEDEFAULT,									
-		k_backbufferWidth,								
-		k_backbufferHeight,								
+		AppSettings::k_backbufferWidth,								
+		AppSettings::k_backbufferHeight,								
 		nullptr,										
 		nullptr,										
 		instanceHandle,									
