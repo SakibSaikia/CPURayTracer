@@ -15,3 +15,5 @@
 #include <DirectXMath.h>
 #include <DirectXPackedVector.h>
 #include <wrl.h>
+
+#include "RayTracingApp.h"
