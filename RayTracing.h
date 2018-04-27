@@ -12,3 +12,13 @@ struct Ray
 	XMVECTOR Evaluate(float t);
 };
 
+__declspec(align(16))
+struct Sphere
+{
+	XMVECTOR center;
+	float radius;
+
+	Sphere(const XMVECTOR& c, const float r);
+	bool Intersects(const Ray& ray);
+};
+

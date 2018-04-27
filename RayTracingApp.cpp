@@ -96,16 +96,24 @@ void RayTracingApp::DrawBitmap()
 	}
 
 	// Trace
+	Sphere s{ XMVECTORF32{0.f, 0.f, 1.f}, 0.5 };
 	std::transform(rays.cbegin(), rays.cend(), m_backbufferHdr.begin(),
-		[](const Ray& r) -> XMFLOAT3
+		[&s](const Ray& r) -> XMFLOAT3
 		{
-			XMVECTOR rayDir = XMVector3Normalize(r.direction);
-			float t = 0.5f * (XMVectorGetY(rayDir) + 1.f);
+			if (s.Intersects(r))
+			{
+				return XMFLOAT3{ 1.f,0.f,0.f };
+			}
+			else
+			{
+				XMVECTOR rayDir = XMVector3Normalize(r.direction);
+				float t = 0.5f * (XMVectorGetY(rayDir) + 1.f);
 
-			XMFLOAT3 outColor;
-			XMStoreFloat3(&outColor, (1.f - t) * XMVECTORF32{ 1.f, 1.f, 1.f } +t * XMVECTORF32{ 0.5f, 0.7f, 1.f });
+				XMFLOAT3 outColor;
+				XMStoreFloat3(&outColor, (1.f - t) * XMVECTORF32 { 1.f, 1.f, 1.f } +t * XMVECTORF32{ 0.5f, 0.7f, 1.f });
 
-			return outColor;
+				return outColor;
+			}
 		});
 
 	// Tonemap
