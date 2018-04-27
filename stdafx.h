@@ -17,3 +17,4 @@
 #include <wrl.h>
 
 #include "RayTracingApp.h"
+#include "RayTracing.h"

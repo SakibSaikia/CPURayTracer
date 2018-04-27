@@ -3,7 +3,7 @@
 namespace AppSettings
 {
 	constexpr int k_backbufferWidth = 1280;
-	constexpr int k_backbufferHeight = 720;
+	constexpr int k_backbufferHeight = 720; 
 }
 
 class RayTracingApp

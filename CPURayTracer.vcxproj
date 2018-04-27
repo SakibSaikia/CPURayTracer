@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="RayTracing.cpp" />
     <ClCompile Include="RayTracingApp.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -27,6 +28,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="RayTracing.h" />
     <ClInclude Include="RayTracingApp.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
@@ -123,6 +125,7 @@
       <ConformanceMode>true</ConformanceMode>
       <SuppressStartupBanner>false</SuppressStartupBanner>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

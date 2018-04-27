@@ -1,5 +1,10 @@
 #include "stdafx.h"
 
+constexpr float AspectRatio()
+{
+	return static_cast<float>(AppSettings::k_backbufferWidth) / static_cast<float>(AppSettings::k_backbufferHeight);
+}
+
 void RayTracingApp::OnInitialize(HWND hWnd)
 {
 	InitDirect2D(hWnd);
@@ -66,15 +71,53 @@ void RayTracingApp::InitBuffers()
 
 void RayTracingApp::DrawBitmap()
 {
-	std::transform(m_backbufferHdr.cbegin(), m_backbufferHdr.cend(), m_backbufferLdr.begin(),
-		[](const DirectX::XMFLOAT3& hdrColor) -> DirectX::PackedVector::XMCOLOR
-	{
-		auto r = std::min<uint32_t>(static_cast<uint32_t>(hdrColor.x * 255.9f), 255u);
-		auto g = std::min<uint32_t>(static_cast<uint32_t>(hdrColor.y * 255.9f), 255u);
-		auto b = std::min<uint32_t>(static_cast<uint32_t>(hdrColor.z * 255.9f), 255u);
+	using namespace DirectX;
+	using namespace DirectX::PackedVector;
 
-		return b | (g << 8) | (r << 16);
-	});
+	// Rays
+	XMVECTORF32 ll{ -AspectRatio(), -1.f, 1.f };
+	XMVECTORF32 x{ 2.f * AspectRatio(), 0.f, 0.f };
+	XMVECTORF32 y{ 0.f, 2.f, 0.f };
+	XMVECTORF32 o{ 0.f, 0.f, 0.f };
+
+	auto xsize = static_cast<float>(AppSettings::k_backbufferWidth);
+	auto ysize = static_cast<float>(AppSettings::k_backbufferHeight);
+
+	std::vector<Ray> rays;
+	for (auto j = AppSettings::k_backbufferHeight - 1; j >= 0; --j)
+	{
+		for (auto i = 0; i < AppSettings::k_backbufferWidth; ++i)
+		{
+			float u = static_cast<float>(i) / xsize;
+			float v = static_cast<float>(j) / ysize;
+
+			rays.emplace_back(o, ll + u * x + v * y);
+		}
+	}
+
+	// Trace
+	std::transform(rays.cbegin(), rays.cend(), m_backbufferHdr.begin(),
+		[](const Ray& r) -> XMFLOAT3
+		{
+			XMVECTOR rayDir = XMVector3Normalize(r.direction);
+			float t = 0.5f * (XMVectorGetY(rayDir) + 1.f);
+
+			XMFLOAT3 outColor;
+			XMStoreFloat3(&outColor, (1.f - t) * XMVECTORF32{ 1.f, 1.f, 1.f } +t * XMVECTORF32{ 0.5f, 0.7f, 1.f });
+
+			return outColor;
+		});
+
+	// Tonemap
+	std::transform(m_backbufferHdr.cbegin(), m_backbufferHdr.cend(), m_backbufferLdr.begin(),
+		[](const DirectX::XMFLOAT3& hdrColor) -> XMCOLOR
+		{
+			auto r = std::min<uint32_t>(static_cast<uint32_t>(hdrColor.x * 255.9f), 255u);
+			auto g = std::min<uint32_t>(static_cast<uint32_t>(hdrColor.y * 255.9f), 255u);
+			auto b = std::min<uint32_t>(static_cast<uint32_t>(hdrColor.z * 255.9f), 255u);
+
+			return b | (g << 8) | (r << 16);
+		});
 
 	m_backbufferBitmap->CopyFromMemory(nullptr, m_backbufferLdr.data(), sizeof(m_backbufferLdr[0]) * AppSettings::k_backbufferWidth);
 
