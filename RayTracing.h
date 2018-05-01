@@ -3,6 +3,14 @@
 using namespace DirectX;
 
 __declspec(align(16))
+struct Payload
+{
+	XMVECTOR t;
+	XMVECTOR p;
+	XMVECTOR normal;
+};
+
+__declspec(align(16))
 struct Ray
 {
 	XMVECTOR origin;
@@ -19,6 +27,6 @@ struct Sphere
 	float radius;
 
 	Sphere(const XMVECTOR& c, const float r);
-	std::optional<XMVECTOR> Intersect(const Ray& ray);
+	bool Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax, Payload& payload);
 };
 

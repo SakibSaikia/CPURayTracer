@@ -97,12 +97,17 @@ void RayTracingApp::DrawBitmap()
 
 	// Trace
 	Sphere s{ XMVECTORF32{0.f, 0.f, 1.f}, 0.5 };
+	XMVECTORF32 half{ 0.5f, 0.5f, 0.5f };
+	Payload payload;
 	std::transform(rays.cbegin(), rays.cend(), m_backbufferHdr.begin(),
-		[&s](const Ray& r) -> XMFLOAT3
+		[&s, &half, &payload](const Ray& r) -> XMFLOAT3
 		{
-			if (s.Intersect(r))
+			if (s.Intersect(r, XMVectorZero(), XMVectorReplicate(FLT_MAX), payload))
 			{
-				return XMFLOAT3{ 1.f,0.f,0.f };
+				XMFLOAT3 outColor;
+				XMStoreFloat3(&outColor, XMVectorMultiplyAdd(half, payload.normal, half));
+
+				return outColor;
 			}
 			else
 			{
