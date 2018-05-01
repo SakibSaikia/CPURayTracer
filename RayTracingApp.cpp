@@ -1,8 +1,8 @@
 #include "stdafx.h"
 
 static const std::array<Sphere, 2> g_scene = {
-	Sphere{ XMVECTORF32{ 0.f, 0.f, 1.f }, 0.5 },
-	Sphere{ XMVECTORF32{ 0.f, -100.5f, 1.f }, 100.f }
+	Sphere{ XMVECTORF32{ 0.f, 0.f, -1.f }, 0.5 },
+	Sphere{ XMVECTORF32{ 0.f, -100.5f, -1.f }, 100.f }
 };
 
 constexpr float AspectRatio()
@@ -80,7 +80,7 @@ void RayTracingApp::DrawBitmap()
 	using namespace DirectX::PackedVector;
 
 	// Rays
-	XMVECTORF32 ll{ -AspectRatio(), -1.f, 1.f };
+	XMVECTORF32 ll{ -AspectRatio(), -1.f, -1.f };
 	XMVECTORF32 x{ 2.f * AspectRatio(), 0.f, 0.f };
 	XMVECTORF32 y{ 0.f, 2.f, 0.f };
 	XMVECTORF32 o{ 0.f, 0.f, 0.f };
