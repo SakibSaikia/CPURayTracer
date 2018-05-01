@@ -97,54 +97,61 @@ void RayTracingApp::DrawBitmap()
 	auto xsize = static_cast<float>(AppSettings::k_backbufferWidth);
 	auto ysize = static_cast<float>(AppSettings::k_backbufferHeight);
 
-	std::vector<Ray> rays;
-	for (auto j = AppSettings::k_backbufferHeight - 1; j >= 0; --j)
+	for (auto n = 0; n < AppSettings::k_spp; ++n)
 	{
-		for (auto i = 0; i < AppSettings::k_backbufferWidth; ++i)
-		{
-			float u = static_cast<float>(i) / xsize;
-			float v = static_cast<float>(j) / ysize;
+		std::random_device device;
+		std::mt19937 generator(device());
+		std::uniform_real_distribution<float> uniformDist(0.f, 1.f);
 
-			rays.push_back(m_camera.GetRay(u, v));
+		std::vector<Ray> rays;
+		for (auto j = AppSettings::k_backbufferHeight - 1; j >= 0; --j)
+		{
+			for (auto i = 0; i < AppSettings::k_backbufferWidth; ++i)
+			{
+				float u = static_cast<float>(i + uniformDist(generator)) / xsize;
+				float v = static_cast<float>(j + uniformDist(generator)) / ysize;
+
+				rays.push_back(m_camera.GetRay(u, v));
+			}
 		}
-	}
 
-	// Trace
-	static const XMVECTORF32 half{ 0.5f, 0.5f, 0.5f };
-	std::transform(rays.cbegin(), rays.cend(), m_backbufferHdr.begin(),
-		[](const Ray& r) -> XMFLOAT3
-		{
-			Payload payload;
-			bool hitAnything = false;
-			XMVECTOR tCurrent = XMVectorReplicate(FLT_MAX);
-
-			for (const Sphere& s : g_scene)
+		// Trace
+		static const XMVECTORF32 half{ 0.5f, 0.5f, 0.5f };
+		std::transform(rays.cbegin(), rays.cend(), m_backbufferHdr.begin(),
+			[](const Ray& r) -> XMFLOAT3
 			{
-				if (s.Intersect(r, XMVectorZero(), tCurrent, payload))
+				Payload payload;
+				bool hitAnything = false;
+				XMVECTOR tCurrent = XMVectorReplicate(FLT_MAX);
+
+				for (const Sphere& s : g_scene)
 				{
-					tCurrent = payload.t;
-					hitAnything = true;
+					if (s.Intersect(r, XMVectorZero(), tCurrent, payload))
+					{
+						tCurrent = payload.t;
+						hitAnything = true;
+					}
 				}
-			}
 
-			if (hitAnything)
-			{
-				XMFLOAT3 outColor;
-				XMStoreFloat3(&outColor, XMVectorMultiplyAdd(half, payload.normal, half));
+				if (hitAnything)
+				{
+					XMFLOAT3 outColor;
+					XMStoreFloat3(&outColor, XMVectorMultiplyAdd(half, payload.normal, half));
 
-				return outColor;
-			}
-			else
-			{
-				XMVECTOR rayDir = XMVector3Normalize(r.direction);
-				float t = 0.5f * (XMVectorGetY(rayDir) + 1.f);
+					return outColor;
+				}
+				else
+				{
+					XMVECTOR rayDir = XMVector3Normalize(r.direction);
+					float t = 0.5f * (XMVectorGetY(rayDir) + 1.f);
 
-				XMFLOAT3 outColor;
-				XMStoreFloat3(&outColor, (1.f - t) * XMVECTORF32 { 1.f, 1.f, 1.f } +t * XMVECTORF32{ 0.5f, 0.7f, 1.f });
+					XMFLOAT3 outColor;
+					XMStoreFloat3(&outColor, (1.f - t) * XMVECTORF32 { 1.f, 1.f, 1.f } +t * XMVECTORF32{ 0.5f, 0.7f, 1.f });
 
-				return outColor;
-			}
-		});
+					return outColor;
+				}
+			});
+	}
 
 	// Tonemap
 	std::transform(m_backbufferHdr.cbegin(), m_backbufferHdr.cend(), m_backbufferLdr.begin(),
