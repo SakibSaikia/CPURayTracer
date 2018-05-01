@@ -17,7 +17,7 @@ Sphere::Sphere(const XMVECTOR& c, const float r) :
 }
 
 
-bool Sphere::Intersects(const Ray& ray)
+std::optional<XMVECTOR> Sphere::Intersect(const Ray& ray)
 {
 	XMVECTOR oc = ray.origin - center;
 
@@ -25,7 +25,15 @@ bool Sphere::Intersects(const Ray& ray)
 	XMVECTOR b = XMVectorReplicate(2.f) * XMVector3Dot(oc, ray.direction);
 	XMVECTOR c = XMVector3Dot(oc, oc) - XMVectorReplicate(radius * radius);
 
-	XMVECTOR det = b * b - XMVectorReplicate(4.f) * a * c;
+	XMVECTOR discriminant = b * b - XMVectorReplicate(4.f) * a * c;
 
-	return XMVectorGetX(det) > 0;
+	if (XMVectorGetX(discriminant) >= 0.f)
+	{
+		XMVECTOR t = (-b - XMVectorSqrt(discriminant)) / (2.f * a);
+		return XMVectorMultiplyAdd(t, ray.direction, ray.origin);
+	}
+	else
+	{
+		return std::nullopt;
+	}
 }

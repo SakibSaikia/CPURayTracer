@@ -19,6 +19,6 @@ struct Sphere
 	float radius;
 
 	Sphere(const XMVECTOR& c, const float r);
-	bool Intersects(const Ray& ray);
+	std::optional<XMVECTOR> Intersect(const Ray& ray);
 };
 

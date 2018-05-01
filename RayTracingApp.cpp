@@ -100,7 +100,7 @@ void RayTracingApp::DrawBitmap()
 	std::transform(rays.cbegin(), rays.cend(), m_backbufferHdr.begin(),
 		[&s](const Ray& r) -> XMFLOAT3
 		{
-			if (s.Intersects(r))
+			if (s.Intersect(r))
 			{
 				return XMFLOAT3{ 1.f,0.f,0.f };
 			}
