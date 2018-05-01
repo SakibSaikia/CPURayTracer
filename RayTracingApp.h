@@ -1,10 +1,25 @@
 #pragma once
 
+#include "RayTracing.h"
+
 namespace AppSettings
 {
 	constexpr int k_backbufferWidth = 1280;
 	constexpr int k_backbufferHeight = 720; 
 }
+
+class Camera
+{
+public:
+	Camera();
+	Ray GetRay(float u, float v);
+
+private:
+	DirectX::XMVECTOR m_origin;
+	DirectX::XMVECTOR m_x;
+	DirectX::XMVECTOR m_y;
+	DirectX::XMVECTOR m_lowerLeft;
+};
 
 class RayTracingApp
 {
@@ -24,4 +39,6 @@ private:
 
 	std::vector<DirectX::XMFLOAT3> m_backbufferHdr;
 	std::vector<DirectX::PackedVector::XMCOLOR> m_backbufferLdr;
+
+	Camera m_camera;
 };

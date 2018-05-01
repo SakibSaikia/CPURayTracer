@@ -10,6 +10,19 @@ constexpr float AspectRatio()
 	return static_cast<float>(AppSettings::k_backbufferWidth) / static_cast<float>(AppSettings::k_backbufferHeight);
 }
 
+Camera::Camera() :
+	m_origin{ XMVectorSet(0.f, 0.f, 0.f, 1.f) },
+	m_x{ XMVectorSet(2.f * AspectRatio(), 0.f, 0.f, 0.f) },
+	m_y{ XMVectorSet(0.f, 2.f, 0.f, 0.f) },
+	m_lowerLeft{ XMVectorSet(-AspectRatio(), -1.f, -1.f, 1.f) }
+{
+}
+
+Ray Camera::GetRay(float u, float v)
+{
+	return Ray{ m_origin, m_lowerLeft + u * m_x + v * m_y };
+}
+
 void RayTracingApp::OnInitialize(HWND hWnd)
 {
 	InitDirect2D(hWnd);
@@ -80,11 +93,6 @@ void RayTracingApp::DrawBitmap()
 	using namespace DirectX::PackedVector;
 
 	// Rays
-	XMVECTORF32 ll{ -AspectRatio(), -1.f, -1.f };
-	XMVECTORF32 x{ 2.f * AspectRatio(), 0.f, 0.f };
-	XMVECTORF32 y{ 0.f, 2.f, 0.f };
-	XMVECTORF32 o{ 0.f, 0.f, 0.f };
-
 	auto xsize = static_cast<float>(AppSettings::k_backbufferWidth);
 	auto ysize = static_cast<float>(AppSettings::k_backbufferHeight);
 
@@ -96,7 +104,7 @@ void RayTracingApp::DrawBitmap()
 			float u = static_cast<float>(i) / xsize;
 			float v = static_cast<float>(j) / ysize;
 
-			rays.emplace_back(o, ll + u * x + v * y);
+			rays.push_back(m_camera.GetRay(u, v));
 		}
 	}
 
