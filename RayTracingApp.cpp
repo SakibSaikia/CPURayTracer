@@ -1,5 +1,10 @@
 #include "stdafx.h"
 
+static const std::array<Sphere, 2> g_scene = {
+	Sphere{ XMVECTORF32{ 0.f, 0.f, 1.f }, 0.5 },
+	Sphere{ XMVECTORF32{ 0.f, -100.5f, 1.f }, 100.f }
+};
+
 constexpr float AspectRatio()
 {
 	return static_cast<float>(AppSettings::k_backbufferWidth) / static_cast<float>(AppSettings::k_backbufferHeight);
@@ -96,13 +101,24 @@ void RayTracingApp::DrawBitmap()
 	}
 
 	// Trace
-	Sphere s{ XMVECTORF32{0.f, 0.f, 1.f}, 0.5 };
-	XMVECTORF32 half{ 0.5f, 0.5f, 0.5f };
-	Payload payload;
+	static const XMVECTORF32 half{ 0.5f, 0.5f, 0.5f };
 	std::transform(rays.cbegin(), rays.cend(), m_backbufferHdr.begin(),
-		[&s, &half, &payload](const Ray& r) -> XMFLOAT3
+		[](const Ray& r) -> XMFLOAT3
 		{
-			if (s.Intersect(r, XMVectorZero(), XMVectorReplicate(FLT_MAX), payload))
+			Payload payload;
+			bool hitAnything = false;
+			XMVECTOR tCurrent = XMVectorReplicate(FLT_MAX);
+
+			for (const Sphere& s : g_scene)
+			{
+				if (s.Intersect(r, XMVectorZero(), tCurrent, payload))
+				{
+					tCurrent = payload.t;
+					hitAnything = true;
+				}
+			}
+
+			if (hitAnything)
 			{
 				XMFLOAT3 outColor;
 				XMStoreFloat3(&outColor, XMVectorMultiplyAdd(half, payload.normal, half));

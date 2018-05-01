@@ -17,7 +17,7 @@ Sphere::Sphere(const XMVECTOR& c, const float r) :
 }
 
 
-bool Sphere::Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax, Payload& payload)
+bool Sphere::Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax, Payload& payload) const
 {
 	XMVECTOR oc = ray.origin - center;
 

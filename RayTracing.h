@@ -27,6 +27,6 @@ struct Sphere
 	float radius;
 
 	Sphere(const XMVECTOR& c, const float r);
-	bool Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax, Payload& payload);
+	bool Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax, Payload& payload) const;
 };
 
