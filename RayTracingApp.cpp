@@ -32,17 +32,9 @@ void RayTracingApp::OnInitialize(HWND hWnd)
 
 void RayTracingApp::OnRender(HWND hWnd)
 {
-	PAINTSTRUCT ps;
-
-	HDC hdc = BeginPaint(hWnd, &ps);
-	m_renderTarget->BeginDraw();
-
 	m_renderTarget->Clear(D2D1::ColorF(D2D1::ColorF::SkyBlue));
 
-	DrawBitmap();
-
-	m_renderTarget->EndDraw();
-	EndPaint(hWnd, &ps);
+	DrawBitmap(hWnd);
 }
 
 void RayTracingApp::InitDirect2D(HWND hWnd)
@@ -88,22 +80,29 @@ void RayTracingApp::InitBuffers()
 	std::fill(m_backbufferLdr.begin(), m_backbufferLdr.end(), 0);
 }
 
-void RayTracingApp::DrawBitmap()
+void RayTracingApp::DrawBitmap(HWND hWnd)
 {
 	using namespace DirectX;
 	using namespace DirectX::PackedVector;
 
 	// Rays
+	std::vector<Ray> rays;
+	rays.reserve(AppSettings::k_backbufferWidth * AppSettings::k_backbufferHeight);
+
 	auto xsize = static_cast<float>(AppSettings::k_backbufferWidth);
 	auto ysize = static_cast<float>(AppSettings::k_backbufferHeight);
 
-	for (auto n = 0; n < AppSettings::k_spp; ++n)
+	for (auto n = 0; n < AppSettings::k_samplesPerPixel; ++n)
 	{
+		PAINTSTRUCT ps;
+		HDC hdc = BeginPaint(hWnd, &ps);
+		m_renderTarget->BeginDraw();
+
 		std::random_device device;
 		std::mt19937 generator(device());
 		std::uniform_real_distribution<float> uniformDist(0.f, 1.f);
 
-		std::vector<Ray> rays;
+		rays.clear();
 		for (auto j = AppSettings::k_backbufferHeight - 1; j >= 0; --j)
 		{
 			for (auto i = 0; i < AppSettings::k_backbufferWidth; ++i)
@@ -117,54 +116,66 @@ void RayTracingApp::DrawBitmap()
 
 		// Trace
 		static const XMVECTORF32 half{ 0.5f, 0.5f, 0.5f };
-		std::transform(rays.cbegin(), rays.cend(), m_backbufferHdr.begin(),
-			[](const Ray& r) -> XMFLOAT3
-			{
-				Payload payload;
-				bool hitAnything = false;
-				XMVECTOR tCurrent = XMVectorReplicate(FLT_MAX);
-
-				for (const Sphere& s : g_scene)
-				{
-					if (s.Intersect(r, XMVectorZero(), tCurrent, payload))
-					{
-						tCurrent = payload.t;
-						hitAnything = true;
-					}
-				}
-
-				if (hitAnything)
-				{
-					XMFLOAT3 outColor;
-					XMStoreFloat3(&outColor, XMVectorMultiplyAdd(half, payload.normal, half));
-
-					return outColor;
-				}
-				else
-				{
-					XMVECTOR rayDir = XMVector3Normalize(r.direction);
-					float t = 0.5f * (XMVectorGetY(rayDir) + 1.f);
-
-					XMFLOAT3 outColor;
-					XMStoreFloat3(&outColor, (1.f - t) * XMVECTORF32 { 1.f, 1.f, 1.f } +t * XMVECTORF32{ 0.5f, 0.7f, 1.f });
-
-					return outColor;
-				}
-			});
-	}
-
-	// Tonemap
-	std::transform(m_backbufferHdr.cbegin(), m_backbufferHdr.cend(), m_backbufferLdr.begin(),
-		[](const DirectX::XMFLOAT3& hdrColor) -> XMCOLOR
+		for (auto rayIndex = 0; rayIndex < rays.size(); ++rayIndex)
 		{
-			auto r = std::min<uint32_t>(static_cast<uint32_t>(hdrColor.x * 255.9f), 255u);
-			auto g = std::min<uint32_t>(static_cast<uint32_t>(hdrColor.y * 255.9f), 255u);
-			auto b = std::min<uint32_t>(static_cast<uint32_t>(hdrColor.z * 255.9f), 255u);
+			Payload payload;
+			bool hitAnything = false;
+			XMVECTOR tCurrent = XMVectorReplicate(FLT_MAX);
 
-			return b | (g << 8) | (r << 16);
+			const Ray& r = rays[rayIndex];
+
+			for (const Sphere& s : g_scene)
+			{
+				if (s.Intersect(r, XMVectorZero(), tCurrent, payload))
+				{
+					tCurrent = payload.t;
+					hitAnything = true;
+				}
+			}
+
+			if (hitAnything)
+			{
+				XMVECTOR colorVec = XMLoadFloat3(&m_backbufferHdr[rayIndex]);
+				colorVec += XMVectorMultiplyAdd(half, payload.normal, half);
+
+				XMFLOAT3 outColor;
+				XMStoreFloat3(&outColor, colorVec);
+				m_backbufferHdr[rayIndex] = outColor;
+			}
+			else
+			{
+				XMVECTOR rayDir = XMVector3Normalize(r.direction);
+				float t = 0.5f * (XMVectorGetY(rayDir) + 1.f);
+
+				XMVECTOR colorVec = XMLoadFloat3(&m_backbufferHdr[rayIndex]);
+				colorVec += (1.f - t) * XMVECTORF32 { 1.f, 1.f, 1.f } +t * XMVECTORF32{ 0.5f, 0.7f, 1.f };
+
+				XMFLOAT3 outColor;
+				XMStoreFloat3(&outColor, colorVec);
+				m_backbufferHdr[rayIndex] = outColor;
+			}
+		}
+
+		// Tonemap
+		std::transform(
+			m_backbufferHdr.cbegin(), m_backbufferHdr.cend(), 
+			m_backbufferLdr.begin(),
+			[n](const DirectX::XMFLOAT3& hdrColor) -> XMCOLOR
+		{
+			XMVECTOR avgColor = XMLoadFloat3(&hdrColor) / static_cast<float>(n+1);
+			
+			XMCOLOR outColor;
+			XMStoreColor(&outColor, avgColor);
+
+			return outColor;
 		});
 
-	m_backbufferBitmap->CopyFromMemory(nullptr, m_backbufferLdr.data(), sizeof(m_backbufferLdr[0]) * AppSettings::k_backbufferWidth);
 
-	m_renderTarget->DrawBitmap(m_backbufferBitmap.Get());
+		m_backbufferBitmap->CopyFromMemory(nullptr, m_backbufferLdr.data(), sizeof(m_backbufferLdr[0]) * AppSettings::k_backbufferWidth);
+
+		m_renderTarget->DrawBitmap(m_backbufferBitmap.Get());
+
+		m_renderTarget->EndDraw();
+		EndPaint(hWnd, &ps);
+	}
 }

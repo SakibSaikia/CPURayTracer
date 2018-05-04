@@ -6,7 +6,7 @@ namespace AppSettings
 {
 	constexpr int k_backbufferWidth = 1280;
 	constexpr int k_backbufferHeight = 720; 
-	constexpr int k_spp = 100;
+	constexpr int k_samplesPerPixel = 100;
 }
 
 class Camera
@@ -31,7 +31,7 @@ public:
 private:
 	void InitDirect2D(HWND hWnd);
 	void InitBuffers();
-	void DrawBitmap();
+	void DrawBitmap(HWND hWnd);
 
 private:
 	Microsoft::WRL::ComPtr<ID2D1Factory> m_d2dFactory;
