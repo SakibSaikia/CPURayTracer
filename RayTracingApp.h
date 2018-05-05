@@ -4,6 +4,8 @@
 
 namespace AppSettings
 {
+	static const std::wstring k_windowCaption = L"Pathtracing Demo";
+
 	constexpr int k_backbufferWidth = 1280;
 	constexpr int k_backbufferHeight = 720; 
 	constexpr int k_samplesPerPixel = 100;
@@ -31,9 +33,10 @@ public:
 private:
 	void InitDirect2D(HWND hWnd);
 	void InitBuffers();
-	void DrawBitmap(HWND hWnd);
+	size_t DrawBitmap(HWND hWnd);
 	std::vector<Ray> GenerateRays() const;
 	std::pair<float, float> GetJitterOffset() const;
+	void DisplayStats(HWND hWnd, size_t rayCount, double timeElapsed) const;
 
 private:
 	Microsoft::WRL::ComPtr<ID2D1Factory> m_d2dFactory;

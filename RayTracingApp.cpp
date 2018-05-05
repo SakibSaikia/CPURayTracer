@@ -39,7 +39,17 @@ void RayTracingApp::OnRender(HWND hWnd)
 
 	m_renderTarget->Clear(D2D1::ColorF(D2D1::ColorF::SkyBlue));
 
-	DrawBitmap(hWnd);
+	{
+		auto start = std::chrono::high_resolution_clock::now();
+
+		size_t rayCount = DrawBitmap(hWnd);
+
+		auto stop = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double, std::milli> duration = stop - start;
+		double timeElapsed = duration.count();
+
+		DisplayStats(hWnd, rayCount, timeElapsed);
+	}
 
 	m_renderTarget->EndDraw();
 	EndPaint(hWnd, &ps);
@@ -121,7 +131,7 @@ std::vector<Ray> RayTracingApp::GenerateRays() const
 	return rays;
 }
 
-void RayTracingApp::DrawBitmap(HWND hWnd)
+size_t RayTracingApp::DrawBitmap(HWND hWnd)
 {
 	using namespace DirectX;
 	using namespace DirectX::PackedVector;
@@ -183,4 +193,17 @@ void RayTracingApp::DrawBitmap(HWND hWnd)
 	m_backbufferBitmap->CopyFromMemory(nullptr, m_backbufferLdr.data(), sizeof(m_backbufferLdr[0]) * AppSettings::k_backbufferWidth);
 
 	m_renderTarget->DrawBitmap(m_backbufferBitmap.Get());
+
+	return rayBuffer.size();
+}
+
+void RayTracingApp::DisplayStats(HWND hWnd, const size_t rayCount, const double timeElapsed) const
+{
+	double mraysPerSecond = static_cast<double>(rayCount) / timeElapsed;
+
+	std::wstring windowText = AppSettings::k_windowCaption +
+		L"\t Mrays/s: " + std::to_wstring(mraysPerSecond) +
+		L"\t spp: " + std::to_wstring(m_sampleCount);
+
+	SetWindowText(hWnd, windowText.c_str());
 }

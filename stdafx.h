@@ -3,7 +3,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <algorithm>
 #include <array>
-#include <assert.h>
+#include <cassert>
+#include <chrono>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>

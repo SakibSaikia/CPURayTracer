@@ -4,7 +4,7 @@
 
 namespace
 {
-	constexpr wchar_t k_windowName[] = L"AppWindow";
+	static const std::wstring k_windowName = L"AppWindow";
 
 	HWND g_wndHandle = nullptr;
 	bool g_initialized = false;
@@ -34,12 +34,12 @@ void InitWindow(HINSTANCE instanceHandle, int show)
 	desc.hCursor = LoadCursor(nullptr, IDC_ARROW);		
 	desc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW); 
 	desc.lpszMenuName = nullptr;						
-	desc.lpszClassName = k_windowName;
+	desc.lpszClassName = k_windowName.c_str();
 	RegisterClass(&desc);
 
 	g_wndHandle = CreateWindow(
-		k_windowName,
-		L"Demo",									
+		k_windowName.c_str(),
+		AppSettings::k_windowCaption.c_str(),									
 		WS_OVERLAPPEDWINDOW,							
 		CW_USEDEFAULT,									
 		CW_USEDEFAULT,									
