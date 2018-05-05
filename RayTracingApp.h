@@ -13,7 +13,7 @@ class Camera
 {
 public:
 	Camera();
-	Ray GetRay(float u, float v);
+	Ray GetRay(float u, float v) const;
 
 private:
 	DirectX::XMVECTOR m_origin;
@@ -32,6 +32,7 @@ private:
 	void InitDirect2D(HWND hWnd);
 	void InitBuffers();
 	void DrawBitmap(HWND hWnd);
+	std::vector<Ray> GenerateRays() const;
 	std::pair<float, float> GetJitterOffset() const;
 
 private:

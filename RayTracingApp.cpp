@@ -18,7 +18,7 @@ Camera::Camera() :
 {
 }
 
-Ray Camera::GetRay(float u, float v)
+Ray Camera::GetRay(float u, float v) const
 {
 	XMVECTOR p = m_lowerLeft + u * m_x + v * m_y;
 	return Ray{ m_origin, p - m_origin };
@@ -97,14 +97,8 @@ std::pair<float, float> RayTracingApp::GetJitterOffset() const
 	return std::make_pair(uniformDist(generator), uniformDist(generator));
 }
 
-void RayTracingApp::DrawBitmap(HWND hWnd)
+std::vector<Ray> RayTracingApp::GenerateRays() const
 {
-	using namespace DirectX;
-	using namespace DirectX::PackedVector;
-
-	++m_sampleCount;
-
-	// Rays
 	std::vector<Ray> rays;
 	rays.reserve(AppSettings::k_backbufferWidth * AppSettings::k_backbufferHeight);
 
@@ -113,7 +107,6 @@ void RayTracingApp::DrawBitmap(HWND hWnd)
 
 	auto[xOffset, yOffset] = GetJitterOffset();
 
-	rays.clear();
 	for (auto j = AppSettings::k_backbufferHeight - 1; j >= 0; --j)
 	{
 		for (auto i = 0; i < AppSettings::k_backbufferWidth; ++i)
@@ -125,15 +118,28 @@ void RayTracingApp::DrawBitmap(HWND hWnd)
 		}
 	}
 
+	return rays;
+}
+
+void RayTracingApp::DrawBitmap(HWND hWnd)
+{
+	using namespace DirectX;
+	using namespace DirectX::PackedVector;
+
+	++m_sampleCount;
+
+	// Rays
+	std::vector<Ray> rayBuffer = GenerateRays();
+
 	// Trace
 	static const XMVECTORF32 half{ 0.5f, 0.5f, 0.5f };
-	for (auto rayIndex = 0; rayIndex < rays.size(); ++rayIndex)
+	for (auto rayIndex = 0; rayIndex < rayBuffer.size(); ++rayIndex)
 	{
 		Payload payload;
 		bool hitAnything = false;
 		XMVECTOR tCurrent = XMVectorReplicate(FLT_MAX);
 
-		const Ray& r = rays[rayIndex];
+		const Ray& r = rayBuffer[rayIndex];
 
 		for (const Sphere& s : g_scene)
 		{
