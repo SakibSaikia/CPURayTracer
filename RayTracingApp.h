@@ -32,6 +32,7 @@ private:
 	void InitDirect2D(HWND hWnd);
 	void InitBuffers();
 	void DrawBitmap(HWND hWnd);
+	std::pair<float, float> GetJitterOffset() const;
 
 private:
 	Microsoft::WRL::ComPtr<ID2D1Factory> m_d2dFactory;
@@ -42,4 +43,6 @@ private:
 	std::vector<DirectX::PackedVector::XMCOLOR> m_backbufferLdr;
 
 	Camera m_camera;
+
+	size_t m_sampleCount = 0;
 };
