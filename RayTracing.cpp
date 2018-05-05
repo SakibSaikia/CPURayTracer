@@ -30,9 +30,12 @@ bool Sphere::Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax,
 	if (XMVectorGetX(discriminant) > 0.f)
 	{
 		XMVECTOR t = (-b - XMVectorSqrt(discriminant)) / a;
-		XMVECTOR valid = XMVectorAndInt(XMVectorGreater(t, tmin), XMVectorLess(t, tmax));
 
-		if(XMVectorGetX(valid) != 0 )
+		uint32_t check1, check2;
+		XMVectorGreaterR(&check1, t, tmin);
+		XMVectorGreaterR(&check2, tmax, t);
+
+		if (XMComparisonAllTrue(check1) && XMComparisonAllTrue(check2))
 		{
 			payload.t = t;
 			payload.p = XMVectorMultiplyAdd(t, ray.direction, ray.origin);
@@ -42,9 +45,11 @@ bool Sphere::Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax,
 		}
 
 		t = (-b + XMVectorSqrt(discriminant)) / a;
-		valid = XMVectorAndInt(XMVectorGreater(t, tmin), XMVectorLess(t, tmax));
 
-		if (XMVectorGetX(valid) != 0)
+		XMVectorGreaterR(&check1, t, tmin);
+		XMVectorGreaterR(&check2, tmax, t);
+
+		if (XMComparisonAllTrue(check1) && XMComparisonAllTrue(check2))
 		{
 			payload.t = t;
 			payload.p = XMVectorMultiplyAdd(t, ray.direction, ray.origin);
