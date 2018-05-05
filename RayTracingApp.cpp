@@ -163,9 +163,9 @@ void RayTracingApp::DrawBitmap(HWND hWnd)
 	std::transform(
 		m_backbufferHdr.cbegin(), m_backbufferHdr.cend(),
 		m_backbufferLdr.begin(),
-		[this](const DirectX::XMVECTOR& hdrColor) -> XMCOLOR
+		[n = m_sampleCount](const DirectX::XMVECTOR& hdrColor) -> XMCOLOR
 	{
-		XMVECTOR avgColor = hdrColor / static_cast<float>(m_sampleCount);
+		XMVECTOR avgColor = hdrColor / static_cast<float>(n);
 
 		XMCOLOR outColor;
 		XMStoreColor(&outColor, avgColor);
