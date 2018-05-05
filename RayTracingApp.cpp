@@ -82,7 +82,7 @@ void RayTracingApp::InitDirect2D(HWND hWnd)
 void RayTracingApp::InitBuffers()
 {
 	m_backbufferHdr.resize(AppSettings::k_backbufferWidth * AppSettings::k_backbufferHeight);
-	std::fill(m_backbufferHdr.begin(), m_backbufferHdr.end(), DirectX::XMFLOAT3(0.f, 0.f, 0.f));
+	std::fill(m_backbufferHdr.begin(), m_backbufferHdr.end(), DirectX::XMVectorZero());
 
 	m_backbufferLdr.resize(AppSettings::k_backbufferWidth * AppSettings::k_backbufferHeight);
 	std::fill(m_backbufferLdr.begin(), m_backbufferLdr.end(), 0);
@@ -146,24 +146,16 @@ void RayTracingApp::DrawBitmap(HWND hWnd)
 
 		if (hitAnything)
 		{
-			XMVECTOR colorVec = XMLoadFloat3(&m_backbufferHdr[rayIndex]);
+			XMVECTOR& colorVec = m_backbufferHdr[rayIndex];
 			colorVec += XMVectorMultiplyAdd(half, payload.normal, half);
-
-			XMFLOAT3 outColor;
-			XMStoreFloat3(&outColor, colorVec);
-			m_backbufferHdr[rayIndex] = outColor;
 		}
 		else
 		{
 			XMVECTOR rayDir = XMVector3Normalize(r.direction);
 			float t = 0.5f * (XMVectorGetY(rayDir) + 1.f);
 
-			XMVECTOR colorVec = XMLoadFloat3(&m_backbufferHdr[rayIndex]);
+			XMVECTOR& colorVec = m_backbufferHdr[rayIndex];
 			colorVec += (1.f - t) * XMVECTORF32 { 1.f, 1.f, 1.f } +t * XMVECTORF32{ 0.5f, 0.7f, 1.f };
-
-			XMFLOAT3 outColor;
-			XMStoreFloat3(&outColor, colorVec);
-			m_backbufferHdr[rayIndex] = outColor;
 		}
 	}
 
@@ -171,9 +163,9 @@ void RayTracingApp::DrawBitmap(HWND hWnd)
 	std::transform(
 		m_backbufferHdr.cbegin(), m_backbufferHdr.cend(),
 		m_backbufferLdr.begin(),
-		[this](const DirectX::XMFLOAT3& hdrColor) -> XMCOLOR
+		[this](const DirectX::XMVECTOR& hdrColor) -> XMCOLOR
 	{
-		XMVECTOR avgColor = XMLoadFloat3(&hdrColor) / static_cast<float>(m_sampleCount);
+		XMVECTOR avgColor = hdrColor / static_cast<float>(m_sampleCount);
 
 		XMCOLOR outColor;
 		XMStoreColor(&outColor, avgColor);

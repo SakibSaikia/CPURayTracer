@@ -39,7 +39,7 @@ private:
 	Microsoft::WRL::ComPtr<ID2D1Bitmap> m_backbufferBitmap;
 	Microsoft::WRL::ComPtr<ID2D1HwndRenderTarget> m_renderTarget;
 
-	std::vector<DirectX::XMFLOAT3> m_backbufferHdr;
+	std::vector<DirectX::XMVECTOR> m_backbufferHdr;
 	std::vector<DirectX::PackedVector::XMCOLOR> m_backbufferLdr;
 
 	Camera m_camera;
