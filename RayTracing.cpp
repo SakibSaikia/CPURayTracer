@@ -33,8 +33,8 @@ XMVECTOR Ray::Evaluate(float t)
 	return XMVectorMultiplyAdd(direction, XMVectorReplicate(t), origin);
 }
 
-Sphere::Sphere(const XMVECTOR& c, const float r) :
-	center{ c }, radius{ r }
+Sphere::Sphere(const XMVECTOR& c, const float r, const int matIndex) :
+	center{ c }, radius{ r }, materialIndex{ matIndex }
 {
 }
 
@@ -62,6 +62,7 @@ bool Sphere::Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax,
 			payload.t = t;
 			payload.p = XMVectorMultiplyAdd(t, ray.direction, ray.origin);
 			payload.normal = (payload.p - center) / XMVectorReplicate(radius);
+			payload.materialIndex = materialIndex;
 
 			return true;
 		}
@@ -76,10 +77,25 @@ bool Sphere::Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax,
 			payload.t = t;
 			payload.p = XMVectorMultiplyAdd(t, ray.direction, ray.origin);
 			payload.normal = (payload.p - center) / XMVectorReplicate(radius);
+			payload.materialIndex = materialIndex;
 
 			return true;
 		}
 	}
 
 	return false;
+}
+
+Lambertian::Lambertian(const float r, const float g, const float b)
+{
+	m_albedo = XMVectorSet(r, g, b, 1.f);
+}
+
+bool Lambertian::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outScatteredRay)
+{
+	XMVECTOR target = hit.p + hit.normal + GetRandomVectorInUnitSphere();
+	outScatteredRay = { hit.p, target - hit.p };
+	outAttenuation = m_albedo;
+
+	return true;
 }

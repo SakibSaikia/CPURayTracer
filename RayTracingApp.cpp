@@ -203,11 +203,11 @@ XMVECTOR RayTracingApp::GetSceneColor(const Ray& ray) const
 	{
 		const Payload& hit = hitInfo.value();
 
-		XMVECTOR target = hit.p + hit.normal + GetRandomVectorInUnitSphere();
+		XMVECTOR attenuation;
+		Ray scatteredRay{ XMVectorZero(), XMVectorZero() };
+		m_materials[hit.materialIndex]->Scatter(ray, hit, attenuation, scatteredRay);
 
-		Ray newRay{ hit.p, target - hit.p };
-
-		return 0.5 * GetSceneColor(newRay);
+		return attenuation * GetSceneColor(scatteredRay);
 	}
 	else
 	{

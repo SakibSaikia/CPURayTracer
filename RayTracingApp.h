@@ -56,8 +56,13 @@ private:
 
 	size_t m_sampleCount = 0;
 
+	const std::array<std::unique_ptr<Material>, 2> m_materials = {
+		std::make_unique<Lambertian>(0.8f, 0.3f, 0.3f),
+		std::make_unique<Lambertian>(0.8f, 0.8f, 0.f)
+	};
+
 	const std::array<Sphere, 2> m_scene = {
-		Sphere{ XMVECTORF32{ 0.f, 0.f, -1.f }, 0.5 },
-		Sphere{ XMVECTORF32{ 0.f, -100.5f, -1.f }, 100.f }
+		Sphere{ XMVECTORF32{ 0.f, 0.f, -1.f }, 0.5, 0 },
+		Sphere{ XMVECTORF32{ 0.f, -100.5f, -1.f }, 100.f, 1 }
 	};
 };
