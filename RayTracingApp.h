@@ -33,9 +33,15 @@ public:
 private:
 	void InitDirect2D(HWND hWnd);
 	void InitBuffers();
+
 	size_t DrawBitmap(HWND hWnd);
+
+	std::optional<Payload> GetClosestIntersection(const Ray& ray) const;
+	XMVECTOR GetSceneColor(const Ray& ray) const;
+
 	std::vector<Ray> GenerateRays() const;
 	std::pair<float, float> GetJitterOffset() const;
+
 	void DisplayStats(HWND hWnd, size_t rayCount, double timeElapsed) const;
 
 private:

@@ -137,37 +137,12 @@ size_t RayTracingApp::DrawBitmap(HWND hWnd)
 	std::vector<Ray> rayBuffer = GenerateRays();
 
 	// Trace
-	static const XMVECTORF32 half{ 0.5f, 0.5f, 0.5f };
 	for (auto rayIndex = 0; rayIndex < rayBuffer.size(); ++rayIndex)
 	{
-		Payload payload;
-		bool hitAnything = false;
-		XMVECTOR tCurrent = XMVectorReplicate(FLT_MAX);
-
 		const Ray& r = rayBuffer[rayIndex];
 
-		for (const Sphere& s : m_scene)
-		{
-			if (s.Intersect(r, XMVectorZero(), tCurrent, payload))
-			{
-				tCurrent = payload.t;
-				hitAnything = true;
-			}
-		}
-
-		if (hitAnything)
-		{
-			XMVECTOR& colorVec = m_backbufferHdr[rayIndex];
-			colorVec += XMVectorMultiplyAdd(half, payload.normal, half);
-		}
-		else
-		{
-			XMVECTOR rayDir = XMVector3Normalize(r.direction);
-			float t = 0.5f * (XMVectorGetY(rayDir) + 1.f);
-
-			XMVECTOR& colorVec = m_backbufferHdr[rayIndex];
-			colorVec += (1.f - t) * XMVECTORF32 { 1.f, 1.f, 1.f } +t * XMVECTORF32{ 0.5f, 0.7f, 1.f };
-		}
+		XMVECTOR& colorVec = m_backbufferHdr[rayIndex];
+		colorVec += GetSceneColor(r);
 	}
 
 	// Tonemap
@@ -190,6 +165,49 @@ size_t RayTracingApp::DrawBitmap(HWND hWnd)
 	m_renderTarget->DrawBitmap(m_backbufferBitmap.Get());
 
 	return rayBuffer.size();
+}
+
+std::optional<Payload> RayTracingApp::GetClosestIntersection(const Ray& ray) const
+{
+	Payload payload;
+	bool hitAnything = false;
+	XMVECTOR tClosest = XMVectorReplicate(FLT_MAX);
+
+	for (const Sphere& s : m_scene)
+	{
+		if (s.Intersect(ray, XMVectorZero(), tClosest, payload))
+		{
+			tClosest = payload.t;
+			hitAnything = true;
+		}
+	}
+
+	if (hitAnything)
+	{
+		return payload;
+	}
+	else
+	{
+		return std::nullopt;
+	}
+}
+
+XMVECTOR RayTracingApp::GetSceneColor(const Ray& ray) const
+{
+	static const XMVECTORF32 half{ 0.5f, 0.5f, 0.5f };
+
+	if (auto hitInfo = GetClosestIntersection(ray))
+	{
+		return XMVectorMultiplyAdd(half, hitInfo.value().normal, half);
+	}
+	else
+	{
+		// Sky gradient
+		XMVECTOR rayDir = XMVector3Normalize(ray.direction);
+		float t = 0.5f * (XMVectorGetY(rayDir) + 1.f);
+
+		return (1.f - t) * XMVECTORF32 { 1.f, 1.f, 1.f } +t * XMVECTORF32{ 0.5f, 0.7f, 1.f };
+	}
 }
 
 void RayTracingApp::DisplayStats(HWND hWnd, const size_t rayCount, const double timeElapsed) const
