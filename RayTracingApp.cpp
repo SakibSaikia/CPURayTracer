@@ -1,10 +1,5 @@
 #include "stdafx.h"
 
-static const std::array<Sphere, 2> g_scene = {
-	Sphere{ XMVECTORF32{ 0.f, 0.f, -1.f }, 0.5 },
-	Sphere{ XMVECTORF32{ 0.f, -100.5f, -1.f }, 100.f }
-};
-
 constexpr float AspectRatio()
 {
 	return static_cast<float>(AppSettings::k_backbufferWidth) / static_cast<float>(AppSettings::k_backbufferHeight);
@@ -151,7 +146,7 @@ size_t RayTracingApp::DrawBitmap(HWND hWnd)
 
 		const Ray& r = rayBuffer[rayIndex];
 
-		for (const Sphere& s : g_scene)
+		for (const Sphere& s : m_scene)
 		{
 			if (s.Intersect(r, XMVectorZero(), tCurrent, payload))
 			{

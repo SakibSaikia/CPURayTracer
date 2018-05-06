@@ -49,4 +49,9 @@ private:
 	Camera m_camera;
 
 	size_t m_sampleCount = 0;
+
+	const std::array<Sphere, 2> m_scene = {
+		Sphere{ XMVECTORF32{ 0.f, 0.f, -1.f }, 0.5 },
+		Sphere{ XMVECTORF32{ 0.f, -100.5f, -1.f }, 100.f }
+	};
 };
