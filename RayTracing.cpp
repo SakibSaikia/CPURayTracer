@@ -1,5 +1,27 @@
 #include "stdafx.h"
 
+XMVECTOR GetRandomVectorInUnitSphere()
+{
+	static std::random_device device;
+	static std::mt19937 generator(device());
+	static std::uniform_real_distribution<float> uniformDist(-1.f, 1.f);
+
+	XMVECTOR p;
+	uint32_t check;
+
+	do
+	{
+		p = XMVECTORF32{ uniformDist(generator), uniformDist(generator), uniformDist(generator) };
+
+		XMVECTOR lengthSq = XMVector3LengthSq(p);
+
+		XMVectorGreaterR(&check, lengthSq, XMVECTORF32{1.f, 1.f, 1.f});
+
+	} while (XMComparisonAllTrue(check));
+
+	return p;
+}
+
 Ray::Ray(const XMVECTOR& o, const XMVECTOR& d) :
 	origin{ o }, direction{ d } 
 {

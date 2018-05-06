@@ -2,6 +2,8 @@
 
 using namespace DirectX;
 
+XMVECTOR GetRandomVectorInUnitSphere();
+
 __declspec(align(16))
 struct Payload
 {

@@ -145,13 +145,15 @@ size_t RayTracingApp::DrawBitmap(HWND hWnd)
 		colorVec += GetSceneColor(r);
 	}
 
-	// Tonemap
+	// Tonemap & gamma correction
 	std::transform(
 		m_backbufferHdr.cbegin(), m_backbufferHdr.cend(),
 		m_backbufferLdr.begin(),
 		[n = m_sampleCount](const DirectX::XMVECTOR& hdrColor) -> XMCOLOR
 	{
 		XMVECTOR avgColor = hdrColor / static_cast<float>(n);
+
+		avgColor = XMVectorSqrtEst(avgColor);
 
 		XMCOLOR outColor;
 		XMStoreColor(&outColor, avgColor);
@@ -172,10 +174,11 @@ std::optional<Payload> RayTracingApp::GetClosestIntersection(const Ray& ray) con
 	Payload payload;
 	bool hitAnything = false;
 	XMVECTOR tClosest = XMVectorReplicate(FLT_MAX);
+	static const XMVECTORF32 bias{ 0.001, 0.001, 0.001 };
 
 	for (const Sphere& s : m_scene)
 	{
-		if (s.Intersect(ray, XMVectorZero(), tClosest, payload))
+		if (s.Intersect(ray, bias, tClosest, payload))
 		{
 			tClosest = payload.t;
 			hitAnything = true;
@@ -198,7 +201,13 @@ XMVECTOR RayTracingApp::GetSceneColor(const Ray& ray) const
 
 	if (auto hitInfo = GetClosestIntersection(ray))
 	{
-		return XMVectorMultiplyAdd(half, hitInfo.value().normal, half);
+		const Payload& hit = hitInfo.value();
+
+		XMVECTOR target = hit.p + hit.normal + GetRandomVectorInUnitSphere();
+
+		Ray newRay{ hit.p, target - hit.p };
+
+		return 0.5 * GetSceneColor(newRay);
 	}
 	else
 	{
