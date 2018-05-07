@@ -91,11 +91,37 @@ Lambertian::Lambertian(const float r, const float g, const float b)
 	m_albedo = XMVectorSet(r, g, b, 1.f);
 }
 
-bool Lambertian::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outScatteredRay)
+std::optional<Ray> Lambertian::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation)
 {
-	XMVECTOR target = hit.p + hit.normal + GetRandomVectorInUnitSphere();
-	outScatteredRay = { hit.p, target - hit.p };
 	outAttenuation = m_albedo;
 
-	return true;
+	XMVECTOR target = hit.p + hit.normal + GetRandomVectorInUnitSphere();
+	Ray scatteredRay = { hit.p, target - hit.p };
+
+	return scatteredRay;
+}
+
+Metal::Metal(const float r, const float g, const float b)
+{
+	m_albedo = XMVectorSet(r, g, b, 1.f);
+}
+
+std::optional<Ray> Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation)
+{
+	outAttenuation = m_albedo;
+
+	XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
+
+	uint32_t check;
+	XMVectorGreaterR(&check, XMVector3Dot(reflectDir, hit.normal), XMVECTORF32{ 0.f, 0.f, 0.f });
+
+	if (XMComparisonAllTrue(check))
+	{
+		Ray scatteredRay = { hit.p, reflectDir };
+		return scatteredRay;
+	}
+	else
+	{
+		return std::nullopt;
+	}
 }

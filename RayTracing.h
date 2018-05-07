@@ -35,16 +35,25 @@ struct Sphere
 class Material
 {
 public:
-	virtual bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outScatteredRay) = 0;
+	virtual std::optional<Ray> Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation) = 0;
 };
 
 class Lambertian : public Material
 {
 public:
-	Lambertian(const float r, const float g, const float b);
-	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outScatteredRay) override;
+	Lambertian(float r, float g, float b);
+	std::optional<Ray> Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation) override;
 
 private:
 	XMVECTOR m_albedo;
 };
 
+class Metal : public Material
+{
+public:
+	Metal(float r, float g, float b);
+	std::optional<Ray> Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation) override;
+
+private:
+	XMVECTOR m_albedo;
+};
