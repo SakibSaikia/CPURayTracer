@@ -57,3 +57,13 @@ public:
 private:
 	XMVECTOR m_albedo;
 };
+
+class Dielectric : public Material
+{
+public:
+	Dielectric(float ior);
+	std::optional<Ray> Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation) override;
+
+private:
+	XMVECTOR m_ior;
+};

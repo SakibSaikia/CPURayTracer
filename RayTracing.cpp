@@ -125,3 +125,13 @@ std::optional<Ray> Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& 
 		return std::nullopt;
 	}
 }
+
+Dielectric::Dielectric(const float ior)
+{
+	m_ior = XMVectorReplicate(ior);
+}
+
+std::optional<Ray> Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation)
+{
+	return std::nullopt;
+}
