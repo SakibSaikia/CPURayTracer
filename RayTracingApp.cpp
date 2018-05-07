@@ -142,7 +142,7 @@ size_t RayTracingApp::DrawBitmap(HWND hWnd)
 		const Ray& r = rayBuffer[rayIndex];
 
 		XMVECTOR& colorVec = m_backbufferHdr[rayIndex];
-		colorVec += GetSceneColor(r);
+		colorVec += GetSceneColor(r, 0);
 	}
 
 	// Tonemap & gamma correction
@@ -195,7 +195,7 @@ std::optional<Payload> RayTracingApp::GetClosestIntersection(const Ray& ray) con
 	}
 }
 
-XMVECTOR RayTracingApp::GetSceneColor(const Ray& ray) const
+XMVECTOR RayTracingApp::GetSceneColor(const Ray& ray, int depth) const
 {
 	static const XMVECTORF32 half{ 0.5f, 0.5f, 0.5f };
 
@@ -204,10 +204,11 @@ XMVECTOR RayTracingApp::GetSceneColor(const Ray& ray) const
 		const Payload& hit = hitInfo.value();
 
 		XMVECTOR attenuation;
+		auto scatterResult = m_materials[hit.materialIndex]->Scatter(ray, hit, attenuation);
 
-		if (auto scatterResult = m_materials[hit.materialIndex]->Scatter(ray, hit, attenuation))
+		if (depth < AppSettings::k_recursionDepth && scatterResult)
 		{
-			return attenuation * GetSceneColor(scatterResult.value());
+			return attenuation * GetSceneColor(scatterResult.value(), depth + 1);
 		}
 		else
 		{

@@ -9,6 +9,7 @@ namespace AppSettings
 	constexpr int k_backbufferWidth = 1280;
 	constexpr int k_backbufferHeight = 720; 
 	constexpr int k_samplesPerPixel = 100;
+	constexpr int k_recursionDepth = 50;
 }
 
 class Camera
@@ -37,7 +38,7 @@ private:
 	size_t DrawBitmap(HWND hWnd);
 
 	std::optional<Payload> GetClosestIntersection(const Ray& ray) const;
-	XMVECTOR GetSceneColor(const Ray& ray) const;
+	XMVECTOR GetSceneColor(const Ray& ray, int depth) const;
 
 	std::vector<Ray> GenerateRays() const;
 	std::pair<float, float> GetJitterOffset() const;
