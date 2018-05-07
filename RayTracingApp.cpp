@@ -40,7 +40,7 @@ void RayTracingApp::OnRender(HWND hWnd)
 		size_t rayCount = DrawBitmap(hWnd);
 
 		auto stop = std::chrono::high_resolution_clock::now();
-		std::chrono::duration<double, std::milli> duration = stop - start;
+		std::chrono::duration<double, std::micro> duration = stop - start;
 		double timeElapsed = duration.count();
 
 		DisplayStats(hWnd, rayCount, timeElapsed);
