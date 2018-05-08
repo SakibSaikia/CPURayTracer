@@ -23,6 +23,7 @@ void RayTracingApp::OnInitialize(HWND hWnd)
 {
 	InitDirect2D(hWnd);
 	InitBuffers();
+	RandomUnitVectorGenerator::Init();
 }
 
 void RayTracingApp::OnRender(HWND hWnd)
@@ -147,6 +148,7 @@ size_t RayTracingApp::DrawBitmap(HWND hWnd)
 
 	// Tonemap & gamma correction
 	std::transform(
+		std::execution::par,
 		m_backbufferHdr.cbegin(), m_backbufferHdr.cend(),
 		m_backbufferLdr.begin(),
 		[n = m_sampleCount](const DirectX::XMVECTOR& hdrColor) -> XMCOLOR
