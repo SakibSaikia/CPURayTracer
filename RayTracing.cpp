@@ -160,6 +160,8 @@ std::optional<Ray> Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVEC
 
 	XMVECTOR outwardNormal;
 	XMVECTOR niOverNt;
+	XMVECTOR cosineIncidentAngle;
+	XMVECTOR reflectionProbability;
 
 	uint32_t check;
 	XMVectorGreaterR(&check, XMVector3Dot(ray.direction, hit.normal), XMVectorZero());
@@ -169,24 +171,44 @@ std::optional<Ray> Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVEC
 		// Air-to-medium
 		outwardNormal = -hit.normal;
 		niOverNt = m_ior;
+		cosineIncidentAngle = m_ior * XMVector3Dot(ray.direction, hit.normal);
 	}
 	else
 	{
 		// Medium-to-air
 		outwardNormal = hit.normal;
 		niOverNt = XMVectorReciprocalEst(m_ior);
+		cosineIncidentAngle = -XMVector3Dot(ray.direction, hit.normal);
 	}
 
-	if (auto refractionResult = Refract(ray.direction, outwardNormal, niOverNt))
+	auto refractionResult = Refract(ray.direction, outwardNormal, niOverNt);
+
+	if (refractionResult)
 	{
-		// If refraction is possible, all light is refracted (simplification)
-		return Ray{ hit.p, refractionResult.value() };
+		// Valid refraction, but can still be reflected based on fresnel term
+		reflectionProbability = XMFresnelTerm(cosineIncidentAngle, m_ior);
 	}
 	else
 	{
 		// Total Internal Reflection
+		reflectionProbability = XMVectorReplicate(1.f);
+	}
+
+	static std::random_device device;
+	static std::mt19937 generator(device());
+	static std::uniform_real_distribution<float> uniformDist(0.f, 1.f);
+
+	XMVECTOR rand = XMVectorReplicate(uniformDist(generator));
+	XMVectorGreaterR(&check, reflectionProbability, rand);
+
+	if (XMComparisonAllTrue(check))
+	{
 		XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
 		return Ray{ hit.p, reflectDir };
+	}
+	else
+	{
+		return Ray{ hit.p, refractionResult.value() };
 	}
 }
 
