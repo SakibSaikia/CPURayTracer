@@ -77,5 +77,8 @@ public:
 	std::optional<Ray> Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation) override;
 
 private:
+	std::optional<XMVECTOR> Refract(const XMVECTOR& v, const XMVECTOR& n, const XMVECTOR niOverNt);
+
+private:
 	XMVECTOR m_ior;
 };

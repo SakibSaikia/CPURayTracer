@@ -135,7 +135,7 @@ std::optional<Ray> Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& 
 	XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
 
 	uint32_t check;
-	XMVectorGreaterR(&check, XMVector3Dot(reflectDir, hit.normal), XMVECTORF32{ 0.f, 0.f, 0.f });
+	XMVectorGreaterR(&check, XMVector3Dot(reflectDir, hit.normal), XMVectorZero());
 
 	if (XMComparisonAllTrue(check))
 	{
@@ -155,5 +155,57 @@ Dielectric::Dielectric(const float ior)
 
 std::optional<Ray> Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation)
 {
-	return std::nullopt;
+	// Attenuation of 1 for glass
+	outAttenuation = { 1.f, 1.f, 1.f };
+
+	XMVECTOR outwardNormal;
+	XMVECTOR niOverNt;
+
+	uint32_t check;
+	XMVectorGreaterR(&check, XMVector3Dot(ray.direction, hit.normal), XMVectorZero());
+
+	if (XMComparisonAllTrue(check))
+	{
+		// Air-to-medium
+		outwardNormal = -hit.normal;
+		niOverNt = m_ior;
+	}
+	else
+	{
+		// Medium-to-air
+		outwardNormal = hit.normal;
+		niOverNt = XMVectorReciprocalEst(m_ior);
+	}
+
+	if (auto refractionResult = Refract(ray.direction, outwardNormal, niOverNt))
+	{
+		// If refraction is possible, all light is refracted (simplification)
+		return Ray{ hit.p, refractionResult.value() };
+	}
+	else
+	{
+		// Total Internal Reflection
+		XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
+		return Ray{ hit.p, reflectDir };
+	}
+}
+
+std::optional<XMVECTOR> Dielectric::Refract(const XMVECTOR& v, const XMVECTOR& n, const XMVECTOR niOverNt)
+{
+	XMVECTOR nDotV = XMVector3Dot(v, n);
+	static const XMVECTORF32 one{ 1.f, 1.f, 1.f };
+
+	XMVECTOR discriminant = one - niOverNt * niOverNt * (one - nDotV * nDotV);
+
+	uint32_t check;
+	XMVectorGreaterR(&check, discriminant, XMVectorZero());
+
+	if (XMComparisonAllTrue(check))
+	{
+		return niOverNt * (v - n * nDotV) - n * XMVectorSqrtEst(discriminant);
+	}
+	else
+	{
+		return std::nullopt;
+	}
 }

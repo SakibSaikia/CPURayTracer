@@ -57,17 +57,18 @@ private:
 
 	size_t m_sampleCount = 0;
 
-	const std::array<std::unique_ptr<Material>, 4> m_materials = {
+	const std::array<std::unique_ptr<Material>, 5> m_materials = {
 		std::make_unique<Lambertian>(0.8f, 0.3f, 0.3f),
 		std::make_unique<Lambertian>(0.8f, 0.8f, 0.f),
 		std::make_unique<Metal>(0.8f, 0.6f, 0.2f),
-		std::make_unique<Metal>(0.8f, 0.8f, 0.8f)
+		std::make_unique<Metal>(0.8f, 0.8f, 0.8f),
+		std::make_unique<Dielectric>(1.5f)
 	};
 
 	const std::array<Sphere, 4> m_scene = {
 		Sphere{ XMVECTORF32{ 0.f, 0.f, -1.f },		0.5f,	0 },
 		Sphere{ XMVECTORF32{ 0.f, -100.5f, -1.f },	100.f,	1 },
 		Sphere{ XMVECTORF32{ 1.f, 0.f, -1.f },		0.5f,	2 },
-		Sphere{ XMVECTORF32{ -1.f, 0.f, -1.f },		0.5f,	3 }
+		Sphere{ XMVECTORF32{ -1.f, 0.f, -1.f },		0.5f,	4 }
 	};
 };

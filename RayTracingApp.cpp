@@ -16,7 +16,7 @@ Camera::Camera() :
 Ray Camera::GetRay(float u, float v) const
 {
 	XMVECTOR p = m_lowerLeft + u * m_x + v * m_y;
-	return Ray{ m_origin, p - m_origin };
+	return Ray{ m_origin, XMVector3Normalize(p - m_origin) };
 }
 
 void RayTracingApp::OnInitialize(HWND hWnd)
