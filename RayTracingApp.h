@@ -10,12 +10,14 @@ namespace AppSettings
 	constexpr int k_backbufferHeight = 720; 
 	constexpr int k_samplesPerPixel = 100;
 	constexpr int k_recursionDepth = 50;
+	constexpr float k_verticalFov = 90.f;
+	constexpr float k_aspectRatio = k_backbufferWidth / static_cast<float>(k_backbufferHeight);
 }
 
 class Camera
 {
 public:
-	Camera();
+	Camera(XMVECTOR origin, XMVECTOR lookAt, float verticalFOV, float aspectRatio);
 	Ray GetRay(float u, float v) const;
 
 private:
@@ -53,7 +55,7 @@ private:
 	std::vector<DirectX::XMVECTOR> m_backbufferHdr;
 	std::vector<DirectX::PackedVector::XMCOLOR> m_backbufferLdr;
 
-	Camera m_camera;
+	std::unique_ptr<Camera> m_camera;
 
 	size_t m_sampleCount = 0;
 

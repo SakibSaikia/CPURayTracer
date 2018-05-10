@@ -5,12 +5,21 @@ constexpr float AspectRatio()
 	return static_cast<float>(AppSettings::k_backbufferWidth) / static_cast<float>(AppSettings::k_backbufferHeight);
 }
 
-Camera::Camera() :
-	m_origin{ XMVectorSet(0.f, 0.f, 0.f, 1.f) },
-	m_x{ XMVectorSet(2.f * AspectRatio(), 0.f, 0.f, 0.f) },
-	m_y{ XMVectorSet(0.f, 2.f, 0.f, 0.f) },
-	m_lowerLeft{ XMVectorSet(-AspectRatio(), -1.f, -1.f, 1.f) }
+Camera::Camera(const XMVECTOR origin, const XMVECTOR lookAt, const float verticalFOV, const float aspectRatio)
 {
+	float theta = verticalFOV * M_PI / 180.f;
+	float halfHeight = std::tan(theta / 2.f);
+	float halfWidth = aspectRatio * halfHeight;
+
+	XMVECTORF32 up{ 0.f, 1.f, 0.f};
+	XMVECTOR w = XMVector3Normalize(origin - lookAt);
+	XMVECTOR u = XMVector3Normalize(XMVector3Cross(up, w));
+	XMVECTOR v = XMVector3Cross(w, u);
+
+	m_origin = origin;
+	m_lowerLeft = origin - halfWidth * u - halfHeight * v - w;
+	m_x = 2 * halfWidth * u;
+	m_y = 2 * halfWidth * v;
 }
 
 Ray Camera::GetRay(float u, float v) const
@@ -23,7 +32,14 @@ void RayTracingApp::OnInitialize(HWND hWnd)
 {
 	InitDirect2D(hWnd);
 	InitBuffers();
+
 	RandomUnitVectorGenerator::Init();
+
+	m_camera = std::make_unique<Camera>(
+		XMVECTORF32{ -2.f, 2.f, 1.f },
+		XMVECTORF32{ 0.f, 0.f - 1.f },
+		AppSettings::k_verticalFov,
+		AppSettings::k_aspectRatio);
 }
 
 void RayTracingApp::OnRender(HWND hWnd)
@@ -120,7 +136,7 @@ std::vector<Ray> RayTracingApp::GenerateRays() const
 			float u = static_cast<float>(i + xOffset) / xsize;
 			float v = static_cast<float>(j + yOffset) / ysize;
 
-			rays.push_back(m_camera.GetRay(u, v));
+			rays.push_back(m_camera->GetRay(u, v));
 		}
 	}
 
