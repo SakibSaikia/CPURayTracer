@@ -6,8 +6,8 @@ void RandGenerator::Init()
 	std::mt19937 generator(device());
 	std::uniform_real_distribution<float> uniformDist(-1.f, 1.f);
 
-	XMVECTOR p;
-	uint32_t check;
+	XMVECTOR p, lengthSq;
+	static const XMVECTORF32 one { 1.f, 1.f, 1.f };
 
 	for (auto n = 0; n < k_randCount; ++n)
 	{
@@ -15,11 +15,9 @@ void RandGenerator::Init()
 		{
 			p = XMVECTORF32{ uniformDist(generator), uniformDist(generator), uniformDist(generator) };
 
-			XMVECTOR lengthSq = XMVector3LengthSq(p);
+			lengthSq = XMVector3LengthSq(p);
 
-			XMVectorGreaterR(&check, lengthSq, XMVECTORF32{ 1.f, 1.f, 1.f });
-
-		} while (XMComparisonAllTrue(check));
+		} while (XMVector3Greater(lengthSq, one));
 
 		m_unitSphereVectorCache[n] = p;
 	}
@@ -84,11 +82,7 @@ bool Sphere::Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax,
 	{
 		XMVECTOR t = (-b - XMVectorSqrt(discriminant)) / a;
 
-		uint32_t check1, check2;
-		XMVectorGreaterR(&check1, t, tmin);
-		XMVectorGreaterR(&check2, tmax, t);
-
-		if (XMComparisonAllTrue(check1) && XMComparisonAllTrue(check2))
+		if (XMVector3Greater(t, tmin) && XMVector3Less(t, tmax))
 		{
 			payload.t = t;
 			payload.p = XMVectorMultiplyAdd(t, ray.direction, ray.origin);
@@ -100,10 +94,7 @@ bool Sphere::Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax,
 
 		t = (-b + XMVectorSqrt(discriminant)) / a;
 
-		XMVectorGreaterR(&check1, t, tmin);
-		XMVectorGreaterR(&check2, tmax, t);
-
-		if (XMComparisonAllTrue(check1) && XMComparisonAllTrue(check2))
+		if (XMVector3Greater(t, tmin) && XMVector3Less(t, tmax))
 		{
 			payload.t = t;
 			payload.p = XMVectorMultiplyAdd(t, ray.direction, ray.origin);
@@ -143,10 +134,7 @@ std::optional<Ray> Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& 
 
 	XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
 
-	uint32_t check;
-	XMVectorGreaterR(&check, XMVector3Dot(reflectDir, hit.normal), XMVectorZero());
-
-	if (XMComparisonAllTrue(check))
+	if (XMVector3Greater(XMVector3Dot(reflectDir, hit.normal), XMVectorZero()))
 	{
 		Ray scatteredRay = { hit.p, reflectDir };
 		return scatteredRay;
@@ -172,10 +160,7 @@ std::optional<Ray> Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVEC
 	XMVECTOR cosineIncidentAngle;
 	XMVECTOR reflectionProbability;
 
-	uint32_t check;
-	XMVectorGreaterR(&check, XMVector3Dot(ray.direction, hit.normal), XMVectorZero());
-
-	if (XMComparisonAllTrue(check))
+	if (XMVector3Greater(XMVector3Dot(ray.direction, hit.normal), XMVectorZero()))
 	{
 		// Air-to-medium
 		outwardNormal = -hit.normal;
@@ -208,9 +193,8 @@ std::optional<Ray> Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVEC
 	static std::uniform_real_distribution<float> uniformDist(0.f, 1.f);
 
 	XMVECTOR rand = XMVectorReplicate(uniformDist(generator));
-	XMVectorGreaterR(&check, reflectionProbability, rand);
 
-	if (XMComparisonAllTrue(check))
+	if (XMVector3Greater(reflectionProbability, rand))
 	{
 		XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
 		return Ray{ hit.p, reflectDir };
@@ -228,10 +212,7 @@ std::optional<XMVECTOR> Dielectric::Refract(const XMVECTOR& v, const XMVECTOR& n
 
 	XMVECTOR discriminant = one - niOverNt * niOverNt * (one - nDotV * nDotV);
 
-	uint32_t check;
-	XMVectorGreaterR(&check, discriminant, XMVectorZero());
-
-	if (XMComparisonAllTrue(check))
+	if (XMVector3Greater(discriminant, XMVectorZero()))
 	{
 		return niOverNt * (v - n * nDotV) - n * XMVectorSqrtEst(discriminant);
 	}
