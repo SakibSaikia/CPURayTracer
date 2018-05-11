@@ -10,14 +10,15 @@ namespace AppSettings
 	constexpr int k_backbufferHeight = 720; 
 	constexpr int k_samplesPerPixel = 100;
 	constexpr int k_recursionDepth = 50;
-	constexpr float k_verticalFov = 90.f;
+	constexpr float k_verticalFov = 20.f;
+	constexpr float k_aperture = 2.f;
 	constexpr float k_aspectRatio = k_backbufferWidth / static_cast<float>(k_backbufferHeight);
 }
 
 class Camera
 {
 public:
-	Camera(XMVECTOR origin, XMVECTOR lookAt, float verticalFOV, float aspectRatio);
+	Camera(XMVECTOR origin, XMVECTOR lookAt, float verticalFOV, float aspectRatio, float focusDistance, float aperture);
 	Ray GetRay(float u, float v) const;
 
 private:
@@ -25,6 +26,7 @@ private:
 	DirectX::XMVECTOR m_x;
 	DirectX::XMVECTOR m_y;
 	DirectX::XMVECTOR m_lowerLeft;
+	float m_aperture;
 };
 
 class RayTracingApp

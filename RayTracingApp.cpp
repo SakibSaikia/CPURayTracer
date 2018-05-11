@@ -5,7 +5,15 @@ constexpr float AspectRatio()
 	return static_cast<float>(AppSettings::k_backbufferWidth) / static_cast<float>(AppSettings::k_backbufferHeight);
 }
 
-Camera::Camera(const XMVECTOR origin, const XMVECTOR lookAt, const float verticalFOV, const float aspectRatio)
+Camera::Camera(
+	const XMVECTOR origin, 
+	const XMVECTOR lookAt, 
+	const float verticalFOV, 
+	const float aspectRatio,
+	const float focusDistance,
+	const float aperture) :
+	m_origin{origin}, 
+	m_aperture{aperture}
 {
 	float theta = verticalFOV * XM_PI / 180.f;
 	float halfHeight = std::tan(theta / 2.f);
@@ -16,16 +24,19 @@ Camera::Camera(const XMVECTOR origin, const XMVECTOR lookAt, const float vertica
 	XMVECTOR u = XMVector3Normalize(XMVector3Cross(up, w));
 	XMVECTOR v = XMVector3Cross(w, u);
 
-	m_origin = origin;
-	m_lowerLeft = origin - halfWidth * u - halfHeight * v - w;
-	m_x = 2 * halfWidth * u;
-	m_y = 2 * halfWidth * v;
+	m_lowerLeft = origin - halfWidth * focusDistance * u - halfHeight * focusDistance * v -  focusDistance * w;
+	m_x = 2 * halfWidth * focusDistance * u;
+	m_y = 2 * halfWidth * focusDistance * v;
 }
 
 Ray Camera::GetRay(float u, float v) const
 {
+	XMVECTOR rd = 0.5f * m_aperture * RandGenerator::VectorInUnitDisk();
+
+	XMVECTOR origin = m_origin + XMVectorGetX(rd) * m_x + XMVectorGetY(rd) * m_y;
 	XMVECTOR p = m_lowerLeft + u * m_x + v * m_y;
-	return Ray{ m_origin, XMVector3Normalize(p - m_origin) };
+
+	return Ray{ origin, XMVector3Normalize(p - origin) };
 }
 
 void RayTracingApp::OnInitialize(HWND hWnd)
@@ -35,11 +46,16 @@ void RayTracingApp::OnInitialize(HWND hWnd)
 
 	RandGenerator::Init();
 
+	XMVECTOR camOrigin = XMVectorSet(3.f, 3.f, 2.f, 1.f);
+	XMVECTOR camLookAt = XMVectorSet(0.f, 0.f, -1.f, 1.f);
+
 	m_camera = std::make_unique<Camera>(
-		XMVECTORF32{ -2.f, 2.f, 1.f },
-		XMVECTORF32{ 0.f, 0.f - 1.f },
+		camOrigin,
+		camLookAt,
 		AppSettings::k_verticalFov,
-		AppSettings::k_aspectRatio);
+		AppSettings::k_aspectRatio,
+		XMVectorGetX(XMVector3Length(camOrigin - camLookAt)),
+		AppSettings::k_aperture);
 }
 
 void RayTracingApp::OnRender(HWND hWnd)
