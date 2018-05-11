@@ -7,7 +7,7 @@ constexpr float AspectRatio()
 
 Camera::Camera(const XMVECTOR origin, const XMVECTOR lookAt, const float verticalFOV, const float aspectRatio)
 {
-	float theta = verticalFOV * M_PI / 180.f;
+	float theta = verticalFOV * XM_PI / 180.f;
 	float halfHeight = std::tan(theta / 2.f);
 	float halfWidth = aspectRatio * halfHeight;
 
@@ -33,7 +33,7 @@ void RayTracingApp::OnInitialize(HWND hWnd)
 	InitDirect2D(hWnd);
 	InitBuffers();
 
-	RandomUnitVectorGenerator::Init();
+	RandGenerator::Init();
 
 	m_camera = std::make_unique<Camera>(
 		XMVECTORF32{ -2.f, 2.f, 1.f },

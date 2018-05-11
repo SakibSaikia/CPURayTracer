@@ -2,7 +2,6 @@
 
 #define WIN32_LEAN_AND_MEAN
 #define _SILENCE_PARALLEL_ALGORITHMS_EXPERIMENTAL_WARNING
-#define _USE_MATH_DEFINES
 
 #include <algorithm>
 #include <array>

@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-void RandomUnitVectorGenerator::Init()
+void RandGenerator::Init()
 {
 	std::random_device device;
 	std::mt19937 generator(device());
@@ -21,13 +21,24 @@ void RandomUnitVectorGenerator::Init()
 
 		} while (XMComparisonAllTrue(check));
 
-		m_cachedVectors[n] = p;
+		m_unitSphereVectorCache[n] = p;
 	}
 
 	m_startTime = std::chrono::high_resolution_clock::now();
 }
 
-XMVECTOR RandomUnitVectorGenerator::Get() 
+XMVECTOR RandGenerator::VectorInUnitSphere()
+{
+	return m_unitSphereVectorCache[Xorshift()];
+}
+
+XMVECTOR RandGenerator::VectorInUnitDisk()
+{
+	XMVECTOR v = m_unitSphereVectorCache[Xorshift()];
+	return XMVectorSetZ(v, 0.f);
+}
+
+int RandGenerator::Xorshift()
 {
 	// Xorshift PRNG 
 	// https://en.wikipedia.org/wiki/Xorshift
@@ -35,13 +46,11 @@ XMVECTOR RandomUnitVectorGenerator::Get()
 	auto timeNow = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<uint64_t, std::nano> duration = (timeNow - m_startTime);
 	uint64_t x = duration.count();
-	x ^= x >> 12; 
-	x ^= x << 25; 
-	x ^= x >> 27; 
+	x ^= x >> 12;
+	x ^= x << 25;
+	x ^= x >> 27;
 
-	uint64_t n = (x % k_randCount);
-
-	return m_cachedVectors[n];
+	return (x % k_randCount);
 }
 
 Ray::Ray(const XMVECTOR& o, const XMVECTOR& d) :
@@ -117,7 +126,7 @@ std::optional<Ray> Lambertian::Scatter(const Ray& ray, const Payload& hit, XMVEC
 {
 	outAttenuation = m_albedo;
 
-	XMVECTOR target = hit.p + hit.normal + RandomUnitVectorGenerator::Get();
+	XMVECTOR target = hit.p + hit.normal + RandGenerator::VectorInUnitSphere();
 	Ray scatteredRay = { hit.p, target - hit.p };
 
 	return scatteredRay;

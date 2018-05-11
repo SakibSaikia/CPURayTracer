@@ -32,15 +32,19 @@ struct Sphere
 	bool Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax, Payload& payload) const;
 };
 
-class RandomUnitVectorGenerator
+class RandGenerator
 {
 public:
 	static void Init();
-	static XMVECTOR Get();
+	static XMVECTOR VectorInUnitSphere();
+	static XMVECTOR VectorInUnitDisk();
+
+private:
+	static int Xorshift();
 
 private:
 	static const uint64_t k_randCount = 4096;
-	inline static std::array<XMVECTOR, k_randCount> m_cachedVectors;
+	inline static std::array<XMVECTOR, k_randCount> m_unitSphereVectorCache;
 	inline static std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime;
 };
 
