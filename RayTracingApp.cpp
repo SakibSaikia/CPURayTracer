@@ -215,13 +215,13 @@ size_t RayTracingApp::DrawBitmap(HWND hWnd)
 	std::vector<Ray> rayBuffer = GenerateRays();
 
 	// Trace
-	for (auto rayIndex = 0; rayIndex < rayBuffer.size(); ++rayIndex)
-	{
-		const Ray& r = rayBuffer[rayIndex];
-
-		XMVECTOR& colorVec = m_backbufferHdr[rayIndex];
-		colorVec += GetSceneColor(r, 0);
-	}
+	int rayIndex = 0;
+	std::for_each(rayBuffer.cbegin(), rayBuffer.cend(), 
+		[rayIndex, this](const Ray& r) mutable
+		{
+			XMVECTOR& colorVec = m_backbufferHdr[rayIndex++];
+			colorVec += GetSceneColor(r, 0);
+		});
 
 	// Tonemap & gamma correction
 	std::transform(
@@ -229,16 +229,16 @@ size_t RayTracingApp::DrawBitmap(HWND hWnd)
 		m_backbufferHdr.cbegin(), m_backbufferHdr.cend(),
 		m_backbufferLdr.begin(),
 		[n = m_sampleCount](const DirectX::XMVECTOR& hdrColor) -> XMCOLOR
-	{
-		XMVECTOR avgColor = hdrColor / static_cast<float>(n);
+		{
+			XMVECTOR avgColor = hdrColor / static_cast<float>(n);
 
-		avgColor = XMVectorSqrtEst(avgColor);
+			avgColor = XMVectorSqrtEst(avgColor);
 
-		XMCOLOR outColor;
-		XMStoreColor(&outColor, avgColor);
+			XMCOLOR outColor;
+			XMStoreColor(&outColor, avgColor);
 
-		return outColor;
-	});
+			return outColor;
+		});
 
 
 	m_backbufferBitmap->CopyFromMemory(nullptr, m_backbufferLdr.data(), sizeof(m_backbufferLdr[0]) * AppSettings::k_backbufferWidth);
