@@ -26,7 +26,7 @@ Camera::Camera(
 
 	m_lowerLeft = origin - halfWidth * focusDistance * u - halfHeight * focusDistance * v -  focusDistance * w;
 	m_x = 2 * halfWidth * focusDistance * u;
-	m_y = 2 * halfWidth * focusDistance * v;
+	m_y = 2 * halfHeight * focusDistance * v;
 }
 
 Ray Camera::GetRay(float u, float v) const
@@ -43,10 +43,12 @@ void RayTracingApp::OnInitialize(HWND hWnd)
 {
 	InitDirect2D(hWnd);
 	InitBuffers();
+	InitScene();
 
 	RandGenerator::Init();
+	RandGenerator::Init();
 
-	XMVECTOR camOrigin = XMVectorSet(3.f, 3.f, 2.f, 1.f);
+	XMVECTOR camOrigin = XMVectorSet(12.f, 2.f, 2.5f, 1.f);
 	XMVECTOR camLookAt = XMVectorSet(0.f, 0.f, -1.f, 1.f);
 
 	m_camera = std::make_unique<Camera>(
@@ -124,6 +126,49 @@ void RayTracingApp::InitBuffers()
 
 	m_backbufferLdr.resize(AppSettings::k_backbufferWidth * AppSettings::k_backbufferHeight);
 	std::fill(m_backbufferLdr.begin(), m_backbufferLdr.end(), 0);
+}
+
+void RayTracingApp::InitScene()
+{
+	static std::random_device device;
+	static std::ranlux24_base generator(device());
+	static std::uniform_real_distribution<float> uniformDist(0.f, 1.f);
+
+	m_scene.reserve(500);
+
+	m_scene.emplace_back(XMVECTORF32{ 0, -1000, 0 }, 1000.f, std::make_unique<Lambertian>(0.5f, 0.5f, 0.5f));
+
+	for (int a = -11; a < 11; ++a)
+	{
+		for (int b = -11; b < 11; ++b)
+		{
+			float chooseMat = uniformDist(generator);
+			XMVECTORF32 center{ a + 0.9f * uniformDist(generator), 0.2f, b + 0.9f * uniformDist(generator) };
+
+			if (chooseMat < 0.8f)
+			{
+				m_scene.emplace_back(center, 0.2f, std::make_unique<Lambertian>(
+					uniformDist(generator) * uniformDist(generator),
+					uniformDist(generator) * uniformDist(generator),
+					uniformDist(generator) * uniformDist(generator)));
+			}
+			else if (chooseMat < 0.95f)
+			{
+				m_scene.emplace_back(center, 0.2f, std::make_unique<Metal>(
+					0.5f * (1.f + uniformDist(generator)),
+					0.5f * (1.f + uniformDist(generator)),
+					0.5f * (1.f + uniformDist(generator))));
+			}
+			else
+			{
+				m_scene.emplace_back(center, 0.2f, std::make_unique<Dielectric>(1.5f));
+			}
+		}
+	}
+
+	m_scene.emplace_back(XMVECTORF32{ 0, 1, 0 }, 1.f, std::make_unique<Dielectric>(1.5f));
+	m_scene.emplace_back(XMVECTORF32{ -4, 1, 0 }, 1.f, std::make_unique<Lambertian>(0.4f, 0.2f, 0.1f));
+	m_scene.emplace_back(XMVECTORF32{ 4, 1, 0 }, 1.f, std::make_unique<Metal>(0.7f, 0.6f, 0.5f));
 }
 
 std::pair<float, float> RayTracingApp::GetJitterOffset() const
@@ -238,7 +283,7 @@ XMVECTOR RayTracingApp::GetSceneColor(const Ray& ray, int depth) const
 		const Payload& hit = hitInfo.value();
 
 		XMVECTOR attenuation;
-		auto scatterResult = m_materials[hit.materialIndex]->Scatter(ray, hit, attenuation);
+		auto scatterResult = hit.material->Scatter(ray, hit, attenuation);
 
 		if (depth < AppSettings::k_recursionDepth && scatterResult)
 		{

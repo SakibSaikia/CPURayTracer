@@ -62,8 +62,8 @@ XMVECTOR Ray::Evaluate(float t)
 	return XMVectorMultiplyAdd(direction, XMVectorReplicate(t), origin);
 }
 
-Sphere::Sphere(const XMVECTOR& c, const float r, const int matIndex) :
-	center{ c }, radius{ r }, materialIndex{ matIndex }
+Sphere::Sphere(const XMVECTOR& c, const float r, std::unique_ptr<Material>&& mat) :
+	center{ c }, radius{ r }, material{ std::move(mat) }
 {
 }
 
@@ -87,7 +87,7 @@ bool Sphere::Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax,
 			payload.t = t;
 			payload.p = XMVectorMultiplyAdd(t, ray.direction, ray.origin);
 			payload.normal = (payload.p - center) / XMVectorReplicate(radius);
-			payload.materialIndex = materialIndex;
+			payload.material = material.get();
 
 			return true;
 		}
@@ -99,7 +99,7 @@ bool Sphere::Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax,
 			payload.t = t;
 			payload.p = XMVectorMultiplyAdd(t, ray.direction, ray.origin);
 			payload.normal = (payload.p - center) / XMVectorReplicate(radius);
-			payload.materialIndex = materialIndex;
+			payload.material = material.get();
 
 			return true;
 		}

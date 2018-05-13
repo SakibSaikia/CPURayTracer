@@ -8,7 +8,7 @@ struct Payload
 	XMVECTOR t;
 	XMVECTOR p;
 	XMVECTOR normal;
-	int materialIndex;
+	class Material* material;
 };
 
 __declspec(align(16))
@@ -26,9 +26,9 @@ struct Sphere
 {
 	XMVECTOR center;
 	float radius;
-	int materialIndex;
+	std::unique_ptr<class Material> material;
 
-	Sphere(const XMVECTOR& c, const float r, int matIndex);
+	Sphere(const XMVECTOR& c, const float r, std::unique_ptr<class Material>&& mat);
 	bool Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax, Payload& payload) const;
 };
 
