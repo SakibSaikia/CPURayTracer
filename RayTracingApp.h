@@ -11,7 +11,7 @@ namespace AppSettings
 	constexpr int k_samplesPerPixel = 100;
 	constexpr int k_recursionDepth = 50;
 	constexpr float k_verticalFov = 25.f;
-	constexpr float k_aperture = 0.f;
+	constexpr float k_aperture = 0.02f;
 	constexpr float k_aspectRatio = k_backbufferWidth / static_cast<float>(k_backbufferHeight);
 }
 

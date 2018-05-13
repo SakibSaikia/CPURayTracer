@@ -49,7 +49,7 @@ void RayTracingApp::OnInitialize(HWND hWnd)
 	RandGenerator::Init();
 
 	XMVECTOR camOrigin = XMVectorSet(12.f, 2.f, 2.5f, 1.f);
-	XMVECTOR camLookAt = XMVectorSet(0.f, 0.f, -1.f, 1.f);
+	XMVECTOR camLookAt = XMVectorSet(0, 1, 0, 1.f);
 
 	m_camera = std::make_unique<Camera>(
 		camOrigin,
