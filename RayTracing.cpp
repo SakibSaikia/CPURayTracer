@@ -78,7 +78,7 @@ bool Sphere::Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax,
 
 	XMVECTOR discriminant = b*b - a*c;
 
-	if (XMVectorGetX(discriminant) > 0.f)
+	if (XMVector3Greater(discriminant, XMVectorZero()))
 	{
 		XMVECTOR t = (-b - XMVectorSqrt(discriminant)) / a;
 
