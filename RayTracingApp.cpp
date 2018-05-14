@@ -180,15 +180,17 @@ std::pair<float, float> RayTracingApp::GetJitterOffset() const
 	return std::make_pair(uniformDist(generator), uniformDist(generator));
 }
 
-std::vector<Ray> RayTracingApp::GenerateRays() const
+std::vector<std::pair<Ray, int>> RayTracingApp::GenerateRays() const
 {
-	std::vector<Ray> rays;
+	std::vector<std::pair<Ray, int>> rays;
 	rays.reserve(AppSettings::k_backbufferWidth * AppSettings::k_backbufferHeight);
 
 	auto xsize = static_cast<float>(AppSettings::k_backbufferWidth);
 	auto ysize = static_cast<float>(AppSettings::k_backbufferHeight);
 
 	auto[xOffset, yOffset] = GetJitterOffset();
+
+	int n = 0;
 
 	for (auto j = AppSettings::k_backbufferHeight - 1; j >= 0; --j)
 	{
@@ -197,7 +199,7 @@ std::vector<Ray> RayTracingApp::GenerateRays() const
 			float u = static_cast<float>(i + xOffset) / xsize;
 			float v = static_cast<float>(j + yOffset) / ysize;
 
-			rays.push_back(m_camera->GetRay(u, v));
+			rays.push_back(std::make_pair(m_camera->GetRay(u, v), n++));
 		}
 	}
 
@@ -212,15 +214,17 @@ size_t RayTracingApp::DrawBitmap(HWND hWnd)
 	++m_sampleCount;
 
 	// Rays
-	std::vector<Ray> rayBuffer = GenerateRays();
+	std::vector<std::pair<Ray, int>> rayBuffer = GenerateRays();
 
 	// Trace
 	int rayIndex = 0;
-	std::for_each(rayBuffer.cbegin(), rayBuffer.cend(), 
-		[rayIndex, this](const Ray& r) mutable
+	std::for_each(
+		std::execution::par,
+		rayBuffer.cbegin(), rayBuffer.cend(), 
+		[rayIndex, this](const std::pair<Ray, int>& r) mutable
 		{
-			XMVECTOR& colorVec = m_backbufferHdr[rayIndex++];
-			colorVec += GetSceneColor(r, 0);
+			XMVECTOR& colorVec = m_backbufferHdr[r.second];
+			colorVec += GetSceneColor(r.first, 0);
 		});
 
 	// Tonemap & gamma correction

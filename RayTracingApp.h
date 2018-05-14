@@ -45,7 +45,7 @@ private:
 	std::optional<Payload> GetClosestIntersection(const Ray& ray) const;
 	XMVECTOR GetSceneColor(const Ray& ray, int depth) const;
 
-	std::vector<Ray> GenerateRays() const;
+	std::vector<std::pair<Ray,int>> GenerateRays() const;
 	std::pair<float, float> GetJitterOffset() const;
 
 	void DisplayStats(HWND hWnd, size_t rayCount, double timeElapsed) const;
