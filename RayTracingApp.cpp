@@ -310,11 +310,15 @@ XMVECTOR RayTracingApp::GetSceneColor(const Ray& ray, int depth) const
 
 void RayTracingApp::DisplayStats(HWND hWnd, const size_t rayCount, const double timeElapsed) const
 {
+	static double totalTimeInSeconds = 0;
+	totalTimeInSeconds += timeElapsed * std::pow(10, -6);
+
 	double mraysPerSecond = static_cast<double>(rayCount) / timeElapsed;
 
 	std::wstring windowText = AppSettings::k_windowCaption +
-		L"\t Mrays/s: " + std::to_wstring(mraysPerSecond) +
-		L"\t spp: " + std::to_wstring(m_sampleCount);
+		L"\t | Mrays/s: " + std::to_wstring(mraysPerSecond) +
+		L"\t | spp: " + std::to_wstring(m_sampleCount) + 
+		L"\t | Time (seconds): " + std::to_wstring(totalTimeInSeconds);
 
 	SetWindowText(hWnd, windowText.c_str());
 }
