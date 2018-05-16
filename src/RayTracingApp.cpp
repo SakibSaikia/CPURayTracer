@@ -10,10 +10,11 @@ Camera::Camera(
 	const XMVECTOR lookAt, 
 	const float verticalFOV, 
 	const float aspectRatio,
-	const float focusDistance,
+	const float focalLength,
 	const float aperture) :
 	m_origin{origin}, 
-	m_aperture{aperture}
+	m_aperture{aperture},
+	m_focalLength{focalLength}
 {
 	float theta = verticalFOV * XM_PI / 180.f;
 	float halfHeight = std::tan(theta / 2.f);
@@ -24,19 +25,22 @@ Camera::Camera(
 	XMVECTOR u = XMVector3Normalize(XMVector3Cross(up, w));
 	XMVECTOR v = XMVector3Cross(w, u);
 
-	m_lowerLeft = origin - halfWidth * focusDistance * u - halfHeight * focusDistance * v -  focusDistance * w;
-	m_x = 2 * halfWidth * focusDistance * u;
-	m_y = 2 * halfHeight * focusDistance * v;
+	m_lowerLeft = origin - halfWidth * u - halfHeight * v -  w;
+	m_x = 2 * halfWidth * u;
+	m_y = 2 * halfHeight * v;
 }
 
 Ray Camera::GetRay(float u, float v) const
 {
-	XMVECTOR rd = 0.5f * m_aperture * RandGenerator::VectorInUnitDisk();
-
-	XMVECTOR origin = m_origin + XMVectorGetX(rd) * m_x + XMVectorGetY(rd) * m_y;
+	// Use primary ray to determine focal point
 	XMVECTOR p = m_lowerLeft + u * m_x + v * m_y;
+	XMVECTOR focalPoint = m_origin + m_focalLength * XMVector3Normalize(p - m_origin);
 
-	return Ray{ origin, XMVector3Normalize(p - origin) };
+	// Secondary ray used for tracing
+	XMVECTOR rd = 0.5f * m_aperture * RandGenerator::VectorInUnitDisk();
+	XMVECTOR origin = m_origin + XMVectorGetX(rd) * m_x + XMVectorGetY(rd) * m_y;
+
+	return Ray{ origin, XMVector3Normalize(focalPoint - origin) };
 }
 
 void RayTracingApp::OnInitialize(HWND hWnd)
