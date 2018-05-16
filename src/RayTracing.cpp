@@ -36,7 +36,7 @@ XMVECTOR RandGenerator::VectorInUnitDisk()
 	return XMVectorSetZ(v, 0.f);
 }
 
-int RandGenerator::Xorshift()
+inline int RandGenerator::Xorshift()
 {
 	// Xorshift PRNG 
 	// https://en.wikipedia.org/wiki/Xorshift
