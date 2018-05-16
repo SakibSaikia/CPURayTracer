@@ -46,7 +46,6 @@ void RayTracingApp::OnInitialize(HWND hWnd)
 	InitScene();
 
 	RandGenerator::Init();
-	RandGenerator::Init();
 
 	XMVECTOR camOrigin = XMVectorSet(12.f, 2.f, 2.5f, 1.f);
 	XMVECTOR camLookAt = XMVectorSet(0, 1, 0, 1.f);
@@ -221,7 +220,7 @@ size_t RayTracingApp::DrawBitmap(HWND hWnd)
 	std::for_each(
 		std::execution::par,
 		rayBuffer.cbegin(), rayBuffer.cend(), 
-		[rayIndex, this](const std::pair<Ray, int>& r) mutable
+		[rayIndex, this](const std::pair<Ray, int>& r)
 		{
 			XMVECTOR& colorVec = m_backbufferHdr[r.second];
 			colorVec += GetSceneColor(r.first, 0);
