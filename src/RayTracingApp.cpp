@@ -230,11 +230,11 @@ size_t RayTracingApp::DrawBitmap(HWND hWnd)
 		});
 
 	// ACES tonemapping parameters
-	static const float a = 2.51;
-	static const float b = 0.03;
-	static const float c = 2.43;
-	static const float d = 0.59;
-	static const float e = 0.14;
+	static const float a = 2.51f;
+	static const float b = 0.03f;
+	static const float c = 2.43f;
+	static const float d = 0.59f;
+	static const float e = 0.14f;
 
 	// Gamma correction 
 	static XMVECTORF32 invGamma{ 1 / 2.2f, 1 / 2.2f, 1 / 2.2f };
