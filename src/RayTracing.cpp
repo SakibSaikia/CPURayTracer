@@ -113,14 +113,14 @@ Lambertian::Lambertian(const float r, const float g, const float b)
 	m_albedo = XMVectorSet(r, g, b, 1.f);
 }
 
-std::optional<Ray> Lambertian::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation)
+bool Lambertian::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay)
 {
 	outAttenuation = m_albedo;
 
 	XMVECTOR target = hit.p + hit.normal + RandGenerator::VectorInUnitSphere();
-	Ray scatteredRay = { hit.p, target - hit.p };
+	outRay = { hit.p, target - hit.p };
 
-	return scatteredRay;
+	return true;
 }
 
 Metal::Metal(const float r, const float g, const float b)
@@ -128,7 +128,7 @@ Metal::Metal(const float r, const float g, const float b)
 	m_albedo = XMVectorSet(r, g, b, 1.f);
 }
 
-std::optional<Ray> Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation)
+bool Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay)
 {
 	outAttenuation = m_albedo;
 
@@ -136,12 +136,12 @@ std::optional<Ray> Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& 
 
 	if (XMVector3Greater(XMVector3Dot(reflectDir, hit.normal), XMVectorZero()))
 	{
-		Ray scatteredRay = { hit.p, reflectDir };
-		return scatteredRay;
+		outRay = { hit.p, reflectDir };
+		return true;
 	}
 	else
 	{
-		return std::nullopt;
+		return false;
 	}
 }
 
@@ -150,7 +150,7 @@ Dielectric::Dielectric(const float ior)
 	m_ior = XMVectorReplicate(ior);
 }
 
-std::optional<Ray> Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation)
+bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay)
 {
 	// Attenuation of 1 for glass
 	outAttenuation = { 1.f, 1.f, 1.f };
@@ -175,9 +175,10 @@ std::optional<Ray> Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVEC
 		cosineIncidentAngle = -XMVector3Dot(ray.direction, hit.normal);
 	}
 
-	auto refractionResult = Refract(ray.direction, outwardNormal, niOverNt);
+	XMVECTOR refractDir;
+	bool canRefract = Refract(ray.direction, outwardNormal, niOverNt, refractDir);
 
-	if (refractionResult)
+	if (canRefract)
 	{
 		// Valid refraction, but can still be reflected based on fresnel term
 		reflectionProbability = XMFresnelTerm(cosineIncidentAngle, m_ior);
@@ -197,15 +198,17 @@ std::optional<Ray> Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVEC
 	if (XMVector3Greater(reflectionProbability, rand))
 	{
 		XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
-		return Ray{ hit.p, reflectDir };
+		outRay = { hit.p, reflectDir };
+		return true;
 	}
 	else
 	{
-		return Ray{ hit.p, refractionResult.value() };
+		outRay = { hit.p, refractDir };
+		return true;
 	}
 }
 
-std::optional<XMVECTOR> Dielectric::Refract(const XMVECTOR& v, const XMVECTOR& n, const XMVECTOR niOverNt)
+bool Dielectric::Refract(const XMVECTOR& v, const XMVECTOR& n, const XMVECTOR niOverNt, XMVECTOR& outDir)
 {
 	XMVECTOR nDotV = XMVector3Dot(v, n);
 	static const XMVECTORF32 one{ 1.f, 1.f, 1.f };
@@ -214,10 +217,11 @@ std::optional<XMVECTOR> Dielectric::Refract(const XMVECTOR& v, const XMVECTOR& n
 
 	if (XMVector3Greater(discriminant, XMVectorZero()))
 	{
-		return niOverNt * (v - n * nDotV) - n * XMVectorSqrtEst(discriminant);
+		outDir = niOverNt * (v - n * nDotV) - n * XMVectorSqrtEst(discriminant);
+		return true;
 	}
 	else
 	{
-		return std::nullopt;
+		return false;
 	}
 }

@@ -303,11 +303,12 @@ XMVECTOR RayTracingApp::GetSceneColor(const Ray& ray, int depth) const
 		const Payload& hit = hitInfo.value();
 
 		XMVECTOR attenuation;
-		auto scatterResult = hit.material->Scatter(ray, hit, attenuation);
+		Ray scatteredRay;
+		bool validHit = hit.material->Scatter(ray, hit, attenuation, scatteredRay);
 
-		if (depth < AppSettings::k_recursionDepth && scatterResult)
+		if (depth < AppSettings::k_recursionDepth && validHit)
 		{
-			return attenuation * GetSceneColor(scatterResult.value(), depth + 1);
+			return attenuation * GetSceneColor(scatteredRay, depth + 1);
 		}
 		else
 		{

@@ -17,6 +17,7 @@ struct Ray
 	XMVECTOR origin;
 	XMVECTOR direction;
 
+	Ray() = default;
 	Ray(const XMVECTOR& o, const XMVECTOR& d);
 	XMVECTOR Evaluate(float t);
 };
@@ -51,14 +52,14 @@ private:
 class Material
 {
 public:
-	virtual std::optional<Ray> Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation) = 0;
+	virtual bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) = 0;
 };
 
 class Lambertian : public Material
 {
 public:
 	Lambertian(float r, float g, float b);
-	std::optional<Ray> Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation) override;
+	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) override;
 
 private:
 	XMVECTOR m_albedo;
@@ -68,7 +69,7 @@ class Metal : public Material
 {
 public:
 	Metal(float r, float g, float b);
-	std::optional<Ray> Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation) override;
+	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) override;
 
 private:
 	XMVECTOR m_albedo;
@@ -78,10 +79,10 @@ class Dielectric : public Material
 {
 public:
 	Dielectric(float ior);
-	std::optional<Ray> Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation) override;
+	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) override;
 
 private:
-	std::optional<XMVECTOR> Refract(const XMVECTOR& v, const XMVECTOR& n, const XMVECTOR niOverNt);
+	bool Refract(const XMVECTOR& v, const XMVECTOR& n, const XMVECTOR niOverNt, XMVECTOR& outDir);
 
 private:
 	XMVECTOR m_ior;
