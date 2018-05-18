@@ -12,8 +12,8 @@ namespace
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-void InitWindow(HINSTANCE instanceHandle, int show);
-int Run();
+void InitWindow(HINSTANCE instanceHandle, int show) noexcept;
+int Run() noexcept;
 
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
@@ -22,7 +22,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	return Run();
 }
 
-void InitWindow(HINSTANCE instanceHandle, int show)
+void InitWindow(HINSTANCE instanceHandle, int show) noexcept
 {
 	WNDCLASS desc;
 	desc.style = CS_HREDRAW | CS_VREDRAW;				
@@ -57,7 +57,7 @@ void InitWindow(HINSTANCE instanceHandle, int show)
 	UpdateWindow(g_wndHandle);
 }
 
-int Run()
+int Run() noexcept
 {
 	MSG msg = { nullptr };
 

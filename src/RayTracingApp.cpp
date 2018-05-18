@@ -16,14 +16,14 @@ Camera::Camera(
 	m_aperture{aperture},
 	m_focalLength{focalLength}
 {
-	float theta = verticalFOV * XM_PI / 180.f;
-	float halfHeight = std::tan(theta / 2.f);
-	float halfWidth = aspectRatio * halfHeight;
+	const float theta = verticalFOV * XM_PI / 180.f;
+	const float halfHeight = std::tan(theta / 2.f);
+	const float halfWidth = aspectRatio * halfHeight;
 
-	XMVECTORF32 up{ 0.f, 1.f, 0.f};
-	XMVECTOR w = XMVector3Normalize(origin - lookAt);
-	XMVECTOR u = XMVector3Normalize(XMVector3Cross(up, w));
-	XMVECTOR v = XMVector3Cross(w, u);
+	const XMVECTORF32 up{ 0.f, 1.f, 0.f};
+	const XMVECTOR w = XMVector3Normalize(origin - lookAt);
+	const XMVECTOR u = XMVector3Normalize(XMVector3Cross(up, w));
+	const XMVECTOR v = XMVector3Cross(w, u);
 
 	m_lowerLeft = origin - halfWidth * u - halfHeight * v -  w;
 	m_x = 2 * halfWidth * u;
@@ -33,12 +33,12 @@ Camera::Camera(
 Ray Camera::GetRay(float u, float v) const
 {
 	// Use primary ray to determine focal point
-	XMVECTOR p = m_lowerLeft + u * m_x + v * m_y;
-	XMVECTOR focalPoint = m_origin + m_focalLength * XMVector3Normalize(p - m_origin);
+	const XMVECTOR p = m_lowerLeft + u * m_x + v * m_y;
+	const XMVECTOR focalPoint = m_origin + m_focalLength * XMVector3Normalize(p - m_origin);
 
 	// Secondary ray used for tracing
-	XMVECTOR rd = 0.5f * m_aperture * RandGenerator::VectorInUnitDisk();
-	XMVECTOR origin = m_origin + XMVectorGetX(rd) * m_x + XMVectorGetY(rd) * m_y;
+	const XMVECTOR rd = 0.5f * m_aperture * RandGenerator::VectorInUnitDisk();
+	const XMVECTOR origin = m_origin + XMVectorGetX(rd) * m_x + XMVectorGetY(rd) * m_y;
 
 	return Ray{ origin, XMVector3Normalize(focalPoint - origin) };
 }
@@ -67,19 +67,19 @@ void RayTracingApp::OnRender(HWND hWnd)
 {
 	PAINTSTRUCT ps;
 
-	HDC hdc = BeginPaint(hWnd, &ps);
+	const HDC hdc = BeginPaint(hWnd, &ps);
 	m_renderTarget->BeginDraw();
 
 	m_renderTarget->Clear(D2D1::ColorF(D2D1::ColorF::SkyBlue));
 
 	{
-		auto start = std::chrono::high_resolution_clock::now();
+		const auto start = std::chrono::high_resolution_clock::now();
 
-		size_t rayCount = DrawBitmap(hWnd);
+		const size_t rayCount = DrawBitmap(hWnd);
 
-		auto stop = std::chrono::high_resolution_clock::now();
-		std::chrono::duration<double, std::micro> duration = stop - start;
-		double timeElapsed = duration.count();
+		const auto stop = std::chrono::high_resolution_clock::now();
+		const std::chrono::duration<double, std::micro> duration = stop - start;
+		const double timeElapsed = duration.count();
 
 		DisplayStats(hWnd, rayCount, timeElapsed);
 	}
@@ -88,7 +88,7 @@ void RayTracingApp::OnRender(HWND hWnd)
 	EndPaint(hWnd, &ps);
 }
 
-void RayTracingApp::InitDirect2D(HWND hWnd)
+void RayTracingApp::InitDirect2D(HWND hWnd) noexcept
 {
 	// Factory
 	HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, m_d2dFactory.GetAddressOf());
@@ -98,7 +98,7 @@ void RayTracingApp::InitDirect2D(HWND hWnd)
 	RECT rc;
 	GetClientRect(hWnd, &rc);
 
-	D2D1_SIZE_U size = D2D1::SizeU(rc.right, rc.bottom);
+	const D2D1_SIZE_U size = D2D1::SizeU(rc.right, rc.bottom);
 
 	hr = m_d2dFactory->CreateHwndRenderTarget(
 		D2D1::RenderTargetProperties(),
@@ -145,7 +145,7 @@ void RayTracingApp::InitScene()
 	{
 		for (int b = -11; b < 11; ++b)
 		{
-			float chooseMat = uniformDist(generator);
+			const float chooseMat = uniformDist(generator);
 			XMVECTORF32 center{ a + 0.9f * uniformDist(generator), 0.2f, b + 0.9f * uniformDist(generator) };
 
 			if (chooseMat < 0.8f)
@@ -188,8 +188,8 @@ std::vector<std::pair<Ray, int>> RayTracingApp::GenerateRays() const
 	std::vector<std::pair<Ray, int>> rays;
 	rays.reserve(AppSettings::k_backbufferWidth * AppSettings::k_backbufferHeight);
 
-	auto xsize = static_cast<float>(AppSettings::k_backbufferWidth);
-	auto ysize = static_cast<float>(AppSettings::k_backbufferHeight);
+	const auto xsize = static_cast<float>(AppSettings::k_backbufferWidth);
+	const auto ysize = static_cast<float>(AppSettings::k_backbufferHeight);
 
 	auto[xOffset, yOffset] = GetJitterOffset();
 
@@ -199,8 +199,8 @@ std::vector<std::pair<Ray, int>> RayTracingApp::GenerateRays() const
 	{
 		for (auto i = 0; i < AppSettings::k_backbufferWidth; ++i)
 		{
-			float u = static_cast<float>(i + xOffset) / xsize;
-			float v = static_cast<float>(j + yOffset) / ysize;
+			const float u = static_cast<float>(i + xOffset) / xsize;
+			const float v = static_cast<float>(j + yOffset) / ysize;
 
 			rays.push_back(std::make_pair(m_camera->GetRay(u, v), n++));
 		}
@@ -220,11 +220,10 @@ size_t RayTracingApp::DrawBitmap(HWND hWnd)
 	std::vector<std::pair<Ray, int>> rayBuffer = GenerateRays();
 
 	// Trace
-	int rayIndex = 0;
 	std::for_each(
 		std::execution::par,
 		rayBuffer.cbegin(), rayBuffer.cend(), 
-		[rayIndex, this](const std::pair<Ray, int>& r)
+		[this](const std::pair<Ray, int>& r)
 		{
 			XMVECTOR& colorVec = m_backbufferHdr[r.second];
 			colorVec += GetSceneColor(r.first, 0);
@@ -270,7 +269,7 @@ size_t RayTracingApp::DrawBitmap(HWND hWnd)
 
 std::optional<Payload> RayTracingApp::GetClosestIntersection(const Ray& ray) const
 {
-	Payload payload;
+	Payload payload{};
 	bool hitAnything = false;
 	XMVECTOR tClosest = XMVectorReplicate(FLT_MAX);
 	static const XMVECTORF32 bias{ 0.001, 0.001, 0.001 };
@@ -304,7 +303,7 @@ XMVECTOR RayTracingApp::GetSceneColor(const Ray& ray, int depth) const
 
 		XMVECTOR attenuation;
 		Ray scatteredRay;
-		bool validHit = hit.material->Scatter(ray, hit, attenuation, scatteredRay);
+		const bool validHit = hit.material->Scatter(ray, hit, attenuation, scatteredRay);
 
 		if (depth < AppSettings::k_recursionDepth && validHit)
 		{
@@ -318,8 +317,8 @@ XMVECTOR RayTracingApp::GetSceneColor(const Ray& ray, int depth) const
 	else
 	{
 		// Sky gradient
-		XMVECTOR rayDir = XMVector3Normalize(ray.direction);
-		float t = 0.5f * (XMVectorGetY(rayDir) + 1.f);
+		const XMVECTOR rayDir = XMVector3Normalize(ray.direction);
+		const float t = 0.5f * (XMVectorGetY(rayDir) + 1.f);
 
 		return (1.f - t) * XMVECTORF32 { 1.f, 1.f, 1.f } +t * XMVECTORF32{ 0.5f, 0.7f, 1.f };
 	}
@@ -330,7 +329,7 @@ void RayTracingApp::DisplayStats(HWND hWnd, const size_t rayCount, const double 
 	static double totalTimeInSeconds = 0;
 	totalTimeInSeconds += timeElapsed * std::pow(10, -6);
 
-	double mraysPerSecond = static_cast<double>(rayCount) / timeElapsed;
+	const double mraysPerSecond = static_cast<double>(rayCount) / timeElapsed;
 
 	std::wstring windowText = AppSettings::k_windowCaption +
 		L"\t | Mrays/s: " + std::to_wstring(mraysPerSecond) +

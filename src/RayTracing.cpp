@@ -4,9 +4,9 @@ void RandGenerator::Init()
 {
 	std::random_device device;
 	std::mt19937 generator(device());
-	std::uniform_real_distribution<float> uniformDist(-1.f, 1.f);
+	const std::uniform_real_distribution<float> uniformDist(-1.f, 1.f);
 
-	XMVECTOR p, lengthSq;
+	XMVECTOR p{}, lengthSq{};
 	static const XMVECTORF32 one { 1.f, 1.f, 1.f };
 
 	for (auto n = 0; n < k_randCount; ++n)
@@ -25,24 +25,24 @@ void RandGenerator::Init()
 	m_startTime = std::chrono::high_resolution_clock::now();
 }
 
-XMVECTOR RandGenerator::VectorInUnitSphere()
+XMVECTOR RandGenerator::VectorInUnitSphere() noexcept
 {
 	return m_unitSphereVectorCache[Xorshift()];
 }
 
-XMVECTOR RandGenerator::VectorInUnitDisk()
+XMVECTOR RandGenerator::VectorInUnitDisk() noexcept
 {
-	XMVECTOR v = m_unitSphereVectorCache[Xorshift()];
+	const XMVECTOR v = m_unitSphereVectorCache[Xorshift()];
 	return XMVectorSetZ(v, 0.f);
 }
 
-inline int RandGenerator::Xorshift()
+inline int RandGenerator::Xorshift() noexcept
 {
 	// Xorshift PRNG 
 	// https://en.wikipedia.org/wiki/Xorshift
 
-	auto timeNow = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<uint64_t, std::nano> duration = (timeNow - m_startTime);
+	const auto timeNow = std::chrono::high_resolution_clock::now();
+	const std::chrono::duration<uint64_t, std::nano> duration = (timeNow - m_startTime);
 	uint64_t x = duration.count();
 	x ^= x >> 12;
 	x ^= x << 25;
@@ -51,7 +51,7 @@ inline int RandGenerator::Xorshift()
 	return (x % k_randCount);
 }
 
-Ray::Ray(const XMVECTOR& o, const XMVECTOR& d) :
+Ray::Ray(const XMVECTOR& o, const XMVECTOR& d) noexcept :
 	origin{ o }, direction{ d } 
 {
 }
@@ -62,7 +62,7 @@ XMVECTOR Ray::Evaluate(float t)
 	return XMVectorMultiplyAdd(direction, XMVectorReplicate(t), origin);
 }
 
-Sphere::Sphere(const XMVECTOR& c, const float r, std::unique_ptr<Material>&& mat) :
+Sphere::Sphere(const XMVECTOR& c, const float r, std::unique_ptr<Material>&& mat) noexcept :
 	center{ c }, radius{ r }, material{ std::move(mat) }
 {
 }
@@ -70,13 +70,13 @@ Sphere::Sphere(const XMVECTOR& c, const float r, std::unique_ptr<Material>&& mat
 
 bool Sphere::Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax, Payload& payload) const
 {
-	XMVECTOR oc = ray.origin - center;
+	const XMVECTOR oc = ray.origin - center;
 
-	XMVECTOR a = XMVector3Dot(ray.direction, ray.direction);
-	XMVECTOR b = XMVector3Dot(oc, ray.direction);
-	XMVECTOR c = XMVector3Dot(oc, oc) - XMVectorReplicate(radius * radius);
+	const XMVECTOR a = XMVector3Dot(ray.direction, ray.direction);
+	const XMVECTOR b = XMVector3Dot(oc, ray.direction);
+	const XMVECTOR c = XMVector3Dot(oc, oc) - XMVectorReplicate(radius * radius);
 
-	XMVECTOR discriminant = b*b - a*c;
+	const XMVECTOR discriminant = b*b - a*c;
 
 	if (XMVector3Greater(discriminant, XMVectorZero()))
 	{
@@ -117,7 +117,7 @@ bool Lambertian::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenu
 {
 	outAttenuation = m_albedo;
 
-	XMVECTOR target = hit.p + hit.normal + RandGenerator::VectorInUnitSphere();
+	const XMVECTOR target = hit.p + hit.normal + RandGenerator::VectorInUnitSphere();
 	outRay = { hit.p, target - hit.p };
 
 	return true;
@@ -132,7 +132,7 @@ bool Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation
 {
 	outAttenuation = m_albedo;
 
-	XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
+	const XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
 
 	if (XMVector3Greater(XMVector3Dot(reflectDir, hit.normal), XMVectorZero()))
 	{
@@ -155,10 +155,10 @@ bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenu
 	// Attenuation of 1 for glass
 	outAttenuation = { 1.f, 1.f, 1.f };
 
-	XMVECTOR outwardNormal;
-	XMVECTOR niOverNt;
-	XMVECTOR cosineIncidentAngle;
-	XMVECTOR reflectionProbability;
+	XMVECTOR outwardNormal{};
+	XMVECTOR niOverNt{};
+	XMVECTOR cosineIncidentAngle{};
+	XMVECTOR reflectionProbability{};
 
 	if (XMVector3Greater(XMVector3Dot(ray.direction, hit.normal), XMVectorZero()))
 	{
@@ -176,7 +176,7 @@ bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenu
 	}
 
 	XMVECTOR refractDir;
-	bool canRefract = Refract(ray.direction, outwardNormal, niOverNt, refractDir);
+	const bool canRefract = Refract(ray.direction, outwardNormal, niOverNt, refractDir);
 
 	if (canRefract)
 	{
@@ -193,11 +193,11 @@ bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenu
 	static std::mt19937 generator(device());
 	static std::uniform_real_distribution<float> uniformDist(0.f, 1.f);
 
-	XMVECTOR rand = XMVectorReplicate(uniformDist(generator));
+	const XMVECTOR rand = XMVectorReplicate(uniformDist(generator));
 
 	if (XMVector3Greater(reflectionProbability, rand))
 	{
-		XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
+		const XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
 		outRay = { hit.p, reflectDir };
 		return true;
 	}
@@ -210,10 +210,10 @@ bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenu
 
 bool Dielectric::Refract(const XMVECTOR& v, const XMVECTOR& n, const XMVECTOR niOverNt, XMVECTOR& outDir)
 {
-	XMVECTOR nDotV = XMVector3Dot(v, n);
+	const XMVECTOR nDotV = XMVector3Dot(v, n);
 	static const XMVECTORF32 one{ 1.f, 1.f, 1.f };
 
-	XMVECTOR discriminant = one - niOverNt * niOverNt * (one - nDotV * nDotV);
+	const XMVECTOR discriminant = one - niOverNt * niOverNt * (one - nDotV * nDotV);
 
 	if (XMVector3Greater(discriminant, XMVectorZero()))
 	{

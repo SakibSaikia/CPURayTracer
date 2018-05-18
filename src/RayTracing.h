@@ -18,7 +18,7 @@ struct Ray
 	XMVECTOR direction;
 
 	Ray() = default;
-	Ray(const XMVECTOR& o, const XMVECTOR& d);
+	Ray(const XMVECTOR& o, const XMVECTOR& d) noexcept;
 	XMVECTOR Evaluate(float t);
 };
 
@@ -29,7 +29,7 @@ struct Sphere
 	float radius;
 	std::unique_ptr<class Material> material;
 
-	Sphere(const XMVECTOR& c, const float r, std::unique_ptr<class Material>&& mat);
+	Sphere(const XMVECTOR& c, const float r, std::unique_ptr<class Material>&& mat) noexcept;
 	bool Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax, Payload& payload) const;
 };
 
@@ -37,11 +37,11 @@ class RandGenerator
 {
 public:
 	static void Init();
-	static XMVECTOR VectorInUnitSphere();
-	static XMVECTOR VectorInUnitDisk();
+	static XMVECTOR VectorInUnitSphere() noexcept;
+	static XMVECTOR VectorInUnitDisk() noexcept;
 
 private:
-	static int Xorshift();
+	static int Xorshift() noexcept;
 
 private:
 	static const uint64_t k_randCount = 4096;

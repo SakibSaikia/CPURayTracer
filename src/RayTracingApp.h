@@ -37,7 +37,7 @@ public:
 	void OnRender(HWND hWnd);
 
 private:
-	void InitDirect2D(HWND hWnd);
+	void InitDirect2D(HWND hWnd) noexcept;
 	void InitBuffers();
 	void InitScene();
 
