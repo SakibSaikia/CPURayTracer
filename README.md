@@ -5,7 +5,7 @@ CPU path tracer based on Perter Shirley's [**Ray Tracing in One Weekend**](https
 * Multithreading
 * DirectXMath for SIMD
 
+![img1](/media/Screenshot.PNG)
+
 ### References
 [Raytracing Depth of Field](https://t.co/qRCE7YJeOb)
-
-![img1](/media/Screenshot.PNG)
