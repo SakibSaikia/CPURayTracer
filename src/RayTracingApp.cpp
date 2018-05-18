@@ -230,19 +230,32 @@ size_t RayTracingApp::DrawBitmap(HWND hWnd)
 			colorVec += GetSceneColor(r.first, 0);
 		});
 
-	// Tonemap & gamma correction
+	// ACES tonemapping parameters
+	static const float a = 2.51;
+	static const float b = 0.03;
+	static const float c = 2.43;
+	static const float d = 0.59;
+	static const float e = 0.14;
+
+	// Gamma correction 
+	static XMVECTORF32 invGamma{ 1 / 2.2f, 1 / 2.2f, 1 / 2.2f };
+
 	std::transform(
 		std::execution::par,
 		m_backbufferHdr.cbegin(), m_backbufferHdr.cend(),
 		m_backbufferLdr.begin(),
 		[n = m_sampleCount](const DirectX::XMVECTOR& hdrColor) -> XMCOLOR
 		{
-			XMVECTOR avgColor = hdrColor / static_cast<float>(n);
+			XMVECTOR color = hdrColor / static_cast<float>(n);
 
-			avgColor = XMVectorSqrtEst(avgColor);
+			// Tonemap
+			color = XMVectorSaturate((color*(a*color + XMVectorReplicate(b))) / (color*(c*color + XMVectorReplicate(d)) + XMVectorReplicate(e)));
+
+			// Gamma correction
+			color = XMVectorPow(color, invGamma);
 
 			XMCOLOR outColor;
-			XMStoreColor(&outColor, avgColor);
+			XMStoreColor(&outColor, color);
 
 			return outColor;
 		});
