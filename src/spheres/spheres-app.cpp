@@ -1,69 +1,12 @@
-#include "stdafx.h"
+#include "spheres-app.h"
 
-constexpr float AspectRatio()
+void SpheresApp::OnInitialize(HWND hWnd)
 {
-	return static_cast<float>(AppSettings::k_backbufferWidth) / static_cast<float>(AppSettings::k_backbufferHeight);
-}
-
-Camera::Camera(
-	const XMVECTOR origin, 
-	const XMVECTOR lookAt, 
-	const float verticalFOV, 
-	const float aspectRatio,
-	const float focalLength,
-	const float aperture) :
-	m_origin{origin}, 
-	m_aperture{aperture},
-	m_focalLength{focalLength}
-{
-	const float theta = verticalFOV * XM_PI / 180.f;
-	const float halfHeight = std::tan(theta / 2.f);
-	const float halfWidth = aspectRatio * halfHeight;
-
-	const XMVECTORF32 up{ 0.f, 1.f, 0.f};
-	const XMVECTOR w = XMVector3Normalize(origin - lookAt);
-	const XMVECTOR u = XMVector3Normalize(XMVector3Cross(up, w));
-	const XMVECTOR v = XMVector3Cross(w, u);
-
-	m_lowerLeft = origin - halfWidth * u - halfHeight * v -  w;
-	m_x = 2 * halfWidth * u;
-	m_y = 2 * halfHeight * v;
-}
-
-Ray Camera::GetRay(float u, float v) const
-{
-	// Use primary ray to determine focal point
-	const XMVECTOR p = m_lowerLeft + u * m_x + v * m_y;
-	const XMVECTOR focalPoint = m_origin + m_focalLength * XMVector3Normalize(p - m_origin);
-
-	// Secondary ray used for tracing
-	const XMVECTOR rd = 0.5f * m_aperture * RandGenerator::VectorInUnitDisk();
-	const XMVECTOR origin = m_origin + XMVectorGetX(rd) * m_x + XMVectorGetY(rd) * m_y;
-
-	return Ray{ origin, XMVector3Normalize(focalPoint - origin) };
-}
-
-void RayTracingApp::OnInitialize(HWND hWnd)
-{
-	InitDirect2D(hWnd);
-	InitBuffers();
+	InitCamera();
 	InitScene();
-
-	RandGenerator::Init();
-
-	XMVECTOR camOrigin = XMVectorSet(12.f, 2.f, 2.5f, 1.f);
-	XMVECTOR camLookAt = XMVectorSet(0, 1, 0, 1.f);
-
-	m_camera = std::make_unique<Camera>(
-		camOrigin,
-		camLookAt,
-		AppSettings::k_verticalFov,
-		AppSettings::k_aspectRatio,
-		XMVectorGetX(XMVector3Length(camOrigin - camLookAt)),
-		AppSettings::k_aperture);
 }
 
-void RayTracingApp::OnRender(HWND hWnd)
+void SpheresApp::OnRender(HWND hWnd)
 {
 	PAINTSTRUCT ps;
 
@@ -88,50 +31,21 @@ void RayTracingApp::OnRender(HWND hWnd)
 	EndPaint(hWnd, &ps);
 }
 
-void RayTracingApp::InitDirect2D(HWND hWnd) noexcept
+void SpheresApp::InitCamera()
 {
-	// Factory
-	HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, m_d2dFactory.GetAddressOf());
-	assert(hr == S_OK);
+	XMVECTOR camOrigin = XMVectorSet(12.f, 2.f, 2.5f, 1.f);
+	XMVECTOR camLookAt = XMVectorSet(0, 1, 0, 1.f);
 
-	// Render target
-	RECT rc;
-	GetClientRect(hWnd, &rc);
-
-	const D2D1_SIZE_U size = D2D1::SizeU(rc.right, rc.bottom);
-
-	hr = m_d2dFactory->CreateHwndRenderTarget(
-		D2D1::RenderTargetProperties(),
-		D2D1::HwndRenderTargetProperties(hWnd, size),
-		m_renderTarget.GetAddressOf()
-	);
-
-	assert(hr == S_OK);
-
-	// Bitmap
-	FLOAT dpiX, dpiY;
-	m_d2dFactory->GetDesktopDpi(&dpiX, &dpiY);
-
-	D2D1_BITMAP_PROPERTIES desc = {};
-	desc.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	desc.pixelFormat.alphaMode = D2D1_ALPHA_MODE_IGNORE;
-	desc.dpiX = dpiX;
-	desc.dpiY = dpiY;
-
-	hr = m_renderTarget->CreateBitmap(size, desc, m_backbufferBitmap.GetAddressOf());
-	assert(hr == S_OK);
+	m_camera = std::make_unique<Camera>(
+		camOrigin,
+		camLookAt,
+		AppSettings::k_verticalFov,
+		AppSettings::k_aspectRatio,
+		XMVectorGetX(XMVector3Length(camOrigin - camLookAt)),
+		AppSettings::k_aperture);
 }
 
-void RayTracingApp::InitBuffers()
-{
-	m_backbufferHdr.resize(AppSettings::k_backbufferWidth * AppSettings::k_backbufferHeight);
-	std::fill(m_backbufferHdr.begin(), m_backbufferHdr.end(), DirectX::XMVectorZero());
-
-	m_backbufferLdr.resize(AppSettings::k_backbufferWidth * AppSettings::k_backbufferHeight);
-	std::fill(m_backbufferLdr.begin(), m_backbufferLdr.end(), 0);
-}
-
-void RayTracingApp::InitScene()
+void SpheresApp::InitScene()
 {
 	static std::random_device device;
 	static std::ranlux24_base generator(device());
@@ -174,7 +88,7 @@ void RayTracingApp::InitScene()
 	m_scene.emplace_back(XMVECTORF32{ 4, 1, 0 }, 1.f, std::make_unique<Metal>(0.7f, 0.6f, 0.5f));
 }
 
-std::pair<float, float> RayTracingApp::GetJitterOffset() const
+std::pair<float, float> SpheresApp::GetJitterOffset() const
 {
 	static std::random_device device;
 	static std::mt19937 generator(device());
@@ -183,7 +97,7 @@ std::pair<float, float> RayTracingApp::GetJitterOffset() const
 	return std::make_pair(uniformDist(generator), uniformDist(generator));
 }
 
-std::vector<std::pair<Ray, int>> RayTracingApp::GenerateRays() const
+std::vector<std::pair<Ray, int>> SpheresApp::GenerateRays() const
 {
 	std::vector<std::pair<Ray, int>> rays;
 	rays.reserve(AppSettings::k_backbufferWidth * AppSettings::k_backbufferHeight);
@@ -209,7 +123,7 @@ std::vector<std::pair<Ray, int>> RayTracingApp::GenerateRays() const
 	return rays;
 }
 
-size_t RayTracingApp::DrawBitmap(HWND hWnd)
+size_t SpheresApp::DrawBitmap(HWND hWnd)
 {
 	using namespace DirectX;
 	using namespace DirectX::PackedVector;
@@ -267,7 +181,7 @@ size_t RayTracingApp::DrawBitmap(HWND hWnd)
 	return rayBuffer.size();
 }
 
-std::optional<Payload> RayTracingApp::GetClosestIntersection(const Ray& ray) const
+std::optional<Payload> SpheresApp::GetClosestIntersection(const Ray& ray) const
 {
 	Payload payload{};
 	bool hitAnything = false;
@@ -293,7 +207,7 @@ std::optional<Payload> RayTracingApp::GetClosestIntersection(const Ray& ray) con
 	}
 }
 
-XMVECTOR RayTracingApp::GetSceneColor(const Ray& ray, int depth) const
+XMVECTOR SpheresApp::GetSceneColor(const Ray& ray, int depth) const
 {
 	static const XMVECTORF32 half{ 0.5f, 0.5f, 0.5f };
 
@@ -324,7 +238,7 @@ XMVECTOR RayTracingApp::GetSceneColor(const Ray& ray, int depth) const
 	}
 }
 
-void RayTracingApp::DisplayStats(HWND hWnd, const size_t rayCount, const double timeElapsed) const
+void SpheresApp::DisplayStats(HWND hWnd, const size_t rayCount, const double timeElapsed) const
 {
 	static double totalTimeInSeconds = 0;
 	totalTimeInSeconds += timeElapsed * std::pow(10, -6);
@@ -337,4 +251,19 @@ void RayTracingApp::DisplayStats(HWND hWnd, const size_t rayCount, const double 
 		L"\t | Time (seconds): " + std::to_wstring(totalTimeInSeconds);
 
 	SetWindowText(hWnd, windowText.c_str());
+}
+
+int SpheresApp::GetBackBufferWidth() const
+{
+	return AppSettings::k_backbufferWidth;
+}
+
+int SpheresApp::GetBackBufferHeight() const
+{
+	return AppSettings::k_backbufferHeight;
+}
+
+std::wstring SpheresApp::GetWindowName() const
+{
+	return AppSettings::k_windowCaption;
 }
