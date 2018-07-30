@@ -77,11 +77,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ray-tracing-app.cpp" />
+    <ClCompile Include="app.cpp" />
     <ClCompile Include="ray-tracing.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ray-tracing-app.h" />
+    <ClInclude Include="app.h" />
     <ClInclude Include="ray-tracing.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

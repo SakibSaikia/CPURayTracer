@@ -2,10 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="ray-tracing.cpp" />
-    <ClCompile Include="ray-tracing-app.cpp" />
+    <ClCompile Include="app.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ray-tracing.h" />
-    <ClInclude Include="ray-tracing-app.h" />
+    <ClInclude Include="app.h" />
   </ItemGroup>
 </Project>

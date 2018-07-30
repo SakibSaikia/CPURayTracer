@@ -1,4 +1,4 @@
 #pragma once
 
+#include "app.h"
 #include "ray-tracing.h"
-#include "ray-tracing-app.h"
