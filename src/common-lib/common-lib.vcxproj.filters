@@ -1,11 +1,39 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="ray-tracing.cpp" />
-    <ClCompile Include="app.cpp" />
+    <ClCompile Include="app.cpp">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="quasi-random.cpp">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="ray-tracing.cpp">
+      <Filter>cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>cpp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ray-tracing.h" />
-    <ClInclude Include="app.h" />
+    <ClInclude Include="app.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="quasi-random.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="ray-tracing.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="inc">
+      <UniqueIdentifier>{2391d618-1809-4200-9b6d-b8de70623e48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cpp">
+      <UniqueIdentifier>{f5c6d147-2987-4e09-8a9d-2cb9357df050}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

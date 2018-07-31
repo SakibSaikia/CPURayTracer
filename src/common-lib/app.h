@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ray-tracing.h"
+#include "stdafx.h"
 
 class RayTracingApp
 {

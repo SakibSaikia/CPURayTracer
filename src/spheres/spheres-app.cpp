@@ -1,9 +1,18 @@
 #include "spheres-app.h"
+#include <sstream>
 
 void SpheresApp::OnInitialize(HWND hWnd)
 {
 	InitCamera();
 	InitScene();
+
+	/*std::stringstream str;
+	for (int i = 1; i < 20; i++)
+	{
+		str << Halton::Sample(i, 2) << std::endl;
+	}
+
+	::OutputDebugStringA(str.str().c_str());*/
 }
 
 void SpheresApp::OnRender(HWND hWnd)
