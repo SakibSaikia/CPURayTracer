@@ -151,11 +151,7 @@ bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenu
 		reflectionProbability = XMVectorReplicate(1.f);
 	}
 
-	static std::random_device device;
-	static std::mt19937 generator(device());
-	static std::uniform_real_distribution<float> uniformDist(0.f, 1.f);
-
-	const XMVECTOR rand = XMVectorReplicate(uniformDist(generator));
+	const XMVECTOR rand = XMVectorReplicate(Random::HaltonSample(m_sampleIndex, 7));
 
 	if (XMVector3Greater(reflectionProbability, rand))
 	{

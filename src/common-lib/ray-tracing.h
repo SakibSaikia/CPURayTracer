@@ -71,6 +71,7 @@ private:
 
 private:
 	XMVECTOR m_ior;
+	uint64_t m_sampleIndex = 0u;
 };
 
 class Camera
