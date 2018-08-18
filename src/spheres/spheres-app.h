@@ -33,7 +33,6 @@ private:
 	XMVECTOR GetSceneColor(const Ray& ray, int depth) const;
 
 	std::vector<std::pair<Ray, int>> GenerateRays() const;
-	std::pair<float, float> GetJitterOffset() const;
 
 private:
 	std::unique_ptr<Camera> m_camera;

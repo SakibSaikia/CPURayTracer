@@ -49,7 +49,6 @@ void RayTracingApp::Initialize(HINSTANCE instanceHandle, int show)
 
 	InitDirect2D(m_wndHandle);
 	InitBuffers();
-	RandGenerator::Init();
 
 	OnInitialize(m_wndHandle);
 }

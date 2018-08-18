@@ -5,14 +5,6 @@ void SpheresApp::OnInitialize(HWND hWnd)
 {
 	InitCamera();
 	InitScene();
-
-	/*std::stringstream str;
-	for (int i = 1; i < 20; i++)
-	{
-		str << Halton::Sample(i, 2) << std::endl;
-	}
-
-	::OutputDebugStringA(str.str().c_str());*/
 }
 
 void SpheresApp::OnRender(HWND hWnd)
@@ -97,15 +89,6 @@ void SpheresApp::InitScene()
 	m_scene.emplace_back(XMVECTORF32{ 4, 1, 0 }, 1.f, std::make_unique<Metal>(0.7f, 0.6f, 0.5f));
 }
 
-std::pair<float, float> SpheresApp::GetJitterOffset() const
-{
-	static std::random_device device;
-	static std::mt19937 generator(device());
-	static std::uniform_real_distribution<float> uniformDist(0.f, 1.f);
-
-	return std::make_pair(uniformDist(generator), uniformDist(generator));
-}
-
 std::vector<std::pair<Ray, int>> SpheresApp::GenerateRays() const
 {
 	std::vector<std::pair<Ray, int>> rays;
@@ -114,18 +97,23 @@ std::vector<std::pair<Ray, int>> SpheresApp::GenerateRays() const
 	const auto xsize = static_cast<float>(AppSettings::k_backbufferWidth);
 	const auto ysize = static_cast<float>(AppSettings::k_backbufferHeight);
 
-	auto[xOffset, yOffset] = GetJitterOffset();
+	XMFLOAT2 jitterOffset = Random::HaltonSample2D(m_sampleCount, 2, 3);
 
-	int n = 0;
+	int rayId = 0;
 
 	for (auto j = AppSettings::k_backbufferHeight - 1; j >= 0; --j)
 	{
 		for (auto i = 0; i < AppSettings::k_backbufferWidth; ++i)
 		{
-			const float u = static_cast<float>(i + xOffset) / xsize;
-			const float v = static_cast<float>(j + yOffset) / ysize;
+			XMFLOAT2 uv;
+			uv.x = static_cast<float>(i + jitterOffset.x) / xsize;
+			uv.y = static_cast<float>(j + jitterOffset.y) / ysize;
 
-			rays.push_back(std::make_pair(m_camera->GetRay(u, v), n++));
+			const XMFLOAT2 offset = Random::HaltonSampleDisk(m_sampleCount + i + j, 4, 5);
+
+			const Ray ray = m_camera->GetRay(uv, offset);
+
+			rays.push_back(std::make_pair(ray, rayId++));
 		}
 	}
 
@@ -159,7 +147,7 @@ size_t SpheresApp::DrawBitmap(HWND hWnd)
 	static const float d = 0.59f;
 	static const float e = 0.14f;
 
-	// Gamma correction 
+	// Gamma
 	static XMVECTORF32 invGamma{ 1 / 2.2f, 1 / 2.2f, 1 / 2.2f };
 
 	std::transform(

@@ -33,22 +33,6 @@ struct Sphere
 	bool Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax, Payload& payload) const;
 };
 
-class RandGenerator
-{
-public:
-	static void Init();
-	static XMVECTOR VectorInUnitSphere() noexcept;
-	static XMVECTOR VectorInUnitDisk() noexcept;
-
-private:
-	static int Xorshift() noexcept;
-
-private:
-	static const uint64_t k_randCount = 4096;
-	inline static std::array<XMVECTOR, k_randCount> m_unitSphereVectorCache;
-	inline static std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime;
-};
-
 class Material
 {
 public:
@@ -63,6 +47,7 @@ public:
 
 private:
 	XMVECTOR m_albedo;
+	uint64_t m_sampleIndex = 0u;
 };
 
 class Metal : public Material
@@ -92,7 +77,7 @@ class Camera
 {
 public:
 	Camera(XMVECTOR origin, XMVECTOR lookAt, float verticalFOV, float aspectRatio, float focalLength, float aperture);
-	Ray GetRay(float u, float v) const;
+	Ray GetRay(XMFLOAT2 uv, XMFLOAT2 offset) const;
 
 private:
 	DirectX::XMVECTOR m_origin;

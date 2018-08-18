@@ -1,55 +1,5 @@
 #include "ray-tracing.h"
-
-void RandGenerator::Init()
-{
-	std::random_device device;
-	std::mt19937 generator(device());
-	const std::uniform_real_distribution<float> uniformDist(-1.f, 1.f);
-
-	XMVECTOR p{}, lengthSq{};
-	static const XMVECTORF32 one { 1.f, 1.f, 1.f };
-
-	for (auto n = 0; n < k_randCount; ++n)
-	{
-		do
-		{
-			p = XMVECTORF32{ uniformDist(generator), uniformDist(generator), uniformDist(generator) };
-
-			lengthSq = XMVector3LengthSq(p);
-
-		} while (XMVector3Greater(lengthSq, one));
-
-		m_unitSphereVectorCache[n] = p;
-	}
-
-	m_startTime = std::chrono::high_resolution_clock::now();
-}
-
-XMVECTOR RandGenerator::VectorInUnitSphere() noexcept
-{
-	return m_unitSphereVectorCache[Xorshift()];
-}
-
-XMVECTOR RandGenerator::VectorInUnitDisk() noexcept
-{
-	const XMVECTOR v = m_unitSphereVectorCache[Xorshift()];
-	return XMVectorSetZ(v, 0.f);
-}
-
-inline int RandGenerator::Xorshift() noexcept
-{
-	// Xorshift PRNG 
-	// https://en.wikipedia.org/wiki/Xorshift
-
-	const auto timeNow = std::chrono::high_resolution_clock::now();
-	const std::chrono::duration<uint64_t, std::nano> duration = (timeNow - m_startTime);
-	uint64_t x = duration.count();
-	x ^= x >> 12;
-	x ^= x << 25;
-	x ^= x >> 27;
-
-	return (x % k_randCount);
-}
+#include "quasi-random.h"
 
 Ray::Ray(const XMVECTOR& o, const XMVECTOR& d) noexcept :
 	origin{ o }, direction{ d } 
@@ -117,8 +67,20 @@ bool Lambertian::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenu
 {
 	outAttenuation = m_albedo;
 
-	const XMVECTOR target = hit.p + hit.normal + RandGenerator::VectorInUnitSphere();
-	outRay = { hit.p, target - hit.p };
+	// Random sample direction in unit hemisphere
+	XMFLOAT3 dir = Random::HaltonSampleHemisphere(m_sampleIndex++, 5, 7);
+
+	// Orthonormal basis about hit normal
+	XMVECTOR b3 = XMVector3Normalize(hit.normal);
+	XMFLOAT3 temp;
+	XMStoreFloat3(&temp, b3);
+	XMVECTOR up = std::abs(temp.x) < 0.5f ? XMVECTORF32{ 1.0f, 0.0f, 0.0f } : XMVECTORF32{ 0.0f, 1.0f, 0.0f };
+	XMVECTOR b1 = XMVector3Cross(up, b3);
+	XMVECTOR b2 = XMVector3Cross(b3, b1);
+
+	// Project sample direction into ortho basis
+	const XMVECTOR scatterDir = dir.x * b1 + dir.y * b2 + dir.z * b3;
+	outRay = { hit.p, scatterDir };
 
 	return true;
 }
@@ -251,15 +213,17 @@ Camera::Camera(
 	m_y = 2 * halfHeight * v;
 }
 
-Ray Camera::GetRay(float u, float v) const
+Ray Camera::GetRay(XMFLOAT2 uv, XMFLOAT2 offset) const
 {
 	// Use primary ray to determine focal point
-	const XMVECTOR p = m_lowerLeft + u * m_x + v * m_y;
+	const XMVECTOR p = m_lowerLeft + uv.x * m_x + uv.y * m_y;
 	const XMVECTOR focalPoint = m_origin + m_focalLength * XMVector3Normalize(p - m_origin);
 
 	// Secondary ray used for tracing
-	const XMVECTOR rd = 0.5f * m_aperture * RandGenerator::VectorInUnitDisk();
-	const XMVECTOR origin = m_origin + XMVectorGetX(rd) * m_x + XMVectorGetY(rd) * m_y;
+	XMFLOAT2 rd;
+	rd.x = 0.5f * m_aperture * offset.x;
+	rd.y = 0.5f * m_aperture * offset.y;
+	const XMVECTOR origin = m_origin + rd.x * m_x + rd.y * m_y;
 
 	return Ray{ origin, XMVector3Normalize(focalPoint - origin) };
 }

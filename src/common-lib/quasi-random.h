@@ -2,11 +2,13 @@
 
 #include "stdafx.h"
 
-namespace Halton
+namespace Random
 {
-	float Sample(int sampleIndex, int base);
-	XMVECTOR Sample2D(int sampleIndex, int base1, int base2);
-	XMVECTOR SampleUnitCircle(int sampleIndex, int base);
-	XMVECTOR SampleUnitSphere(int sampleIndex, int base1, int base2);
-	XMVECTOR SampleDisk(float radius, int sampleIndex, int base1, int base2);
+	float HaltonSample(uint64_t sampleIndex, uint32_t base);
+	XMFLOAT2 HaltonSample2D(uint64_t sampleIndex, uint32_t base1, uint32_t base2);
+	XMFLOAT2 HaltonSampleRing(uint64_t sampleIndex, uint32_t base);
+	XMFLOAT2 HaltonSampleDisk(uint64_t sampleIndex, uint32_t base1, uint32_t base2);
+	XMFLOAT3 HaltonSampleHemisphere(uint64_t sampleIndex, uint32_t base1, uint32_t base2);
+
+	uint64_t Xorshift();
 };
