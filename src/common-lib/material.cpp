@@ -6,7 +6,7 @@ Lambertian::Lambertian(const float r, const float g, const float b)
 	m_albedo = XMVectorSet(r, g, b, 1.f);
 }
 
-bool Lambertian::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay)
+bool Lambertian::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
 {
 	outAttenuation = m_albedo;
 
@@ -33,7 +33,7 @@ Metal::Metal(const float r, const float g, const float b)
 	m_albedo = XMVectorSet(r, g, b, 1.f);
 }
 
-bool Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay)
+bool Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
 {
 	outAttenuation = m_albedo;
 
@@ -55,7 +55,7 @@ Dielectric::Dielectric(const float ior)
 	m_ior = XMVectorReplicate(ior);
 }
 
-bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay)
+bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const
 {
 	// Attenuation of 1 for glass
 	outAttenuation = { 1.f, 1.f, 1.f };
@@ -109,7 +109,7 @@ bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenu
 	}
 }
 
-bool Dielectric::Refract(const XMVECTOR& v, const XMVECTOR& n, const XMVECTOR niOverNt, XMVECTOR& outDir)
+bool Dielectric::Refract(const XMVECTOR& v, const XMVECTOR& n, const XMVECTOR niOverNt, XMVECTOR& outDir) const
 {
 	const XMVECTOR nDotV = XMVector3Dot(v, n);
 	static const XMVECTORF32 one{ 1.f, 1.f, 1.f };
