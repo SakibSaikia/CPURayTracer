@@ -94,7 +94,7 @@ bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenu
 		reflectionProbability = XMVectorReplicate(1.f);
 	}
 
-	const XMVECTOR rand = XMVectorReplicate(Random::HaltonSample(m_sampleIndex, 7));
+	const XMVECTOR rand = XMVectorReplicate(Random::HaltonSample(m_sampleIndex++, 7));
 
 	if (XMVector3Greater(reflectionProbability, rand))
 	{
