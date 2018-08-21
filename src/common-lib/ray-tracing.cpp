@@ -59,6 +59,30 @@ bool Sphere::Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax,
 	return false;
 }
 
+AABB Sphere::GetAABB() const
+{
+	XMFLOAT3 origin;
+	XMStoreFloat3(&origin, center);
+
+	const XMFLOAT3 extents = { radius, radius, radius };
+
+	return AABB{ origin, extents };
+}
+
+AABB::AABB(const XMFLOAT3& center, const XMFLOAT3& extents) : 
+	m_aabb{center, extents}
+{
+}
+
+bool AABB::Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax) const
+{
+	float t;
+	bool anyIntersection = m_aabb.Intersects(ray.origin, ray.direction, t);
+
+	XMVECTOR tVec = XMVectorReplicate(t);
+	return anyIntersection && XMVector3Greater(tVec, tmin) && XMVector3Less(tVec, tmax);
+}
+
 Camera::Camera(
 	const XMVECTOR origin,
 	const XMVECTOR lookAt,

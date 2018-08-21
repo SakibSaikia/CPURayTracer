@@ -22,15 +22,27 @@ struct Ray
 	XMVECTOR Evaluate(float t);
 };
 
-__declspec(align(16))
-struct Sphere
+struct AABB
 {
-	XMVECTOR center;
+	BoundingBox m_aabb;
+	AABB(const XMFLOAT3& center, const XMFLOAT3& extents);
+	bool Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax) const;
+};
+
+struct Hitable
+{
+	virtual bool Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax, Payload& payload) const = 0;
+};
+
+struct Sphere : public Hitable
+{
+	__declspec(align(16)) XMVECTOR center;
 	float radius;
 	std::unique_ptr<class Material> material;
 
 	Sphere(const XMVECTOR& c, const float r, std::unique_ptr<class Material>&& mat) noexcept;
-	bool Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax, Payload& payload) const;
+	AABB GetAABB() const;
+	bool Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax, Payload& payload) const override;
 };
 
 class Camera

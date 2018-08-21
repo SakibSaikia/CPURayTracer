@@ -36,6 +36,6 @@ private:
 
 private:
 	std::unique_ptr<Camera> m_camera;
-	std::vector<Sphere> m_scene;
+	std::vector<std::unique_ptr<Hitable>> m_scene;
 	size_t m_sampleCount = 0;
 };

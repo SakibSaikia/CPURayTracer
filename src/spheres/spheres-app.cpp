@@ -54,7 +54,7 @@ void SpheresApp::InitScene()
 
 	m_scene.reserve(500);
 
-	m_scene.emplace_back(XMVECTORF32{ 0, -1000, 0 }, 1000.f, std::make_unique<Lambertian>(0.5f, 0.5f, 0.5f));
+	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, -1000, 0 }, 1000.f, std::make_unique<Lambertian>(0.5f, 0.5f, 0.5f)));
 
 	for (int a = -11; a < 11; ++a)
 	{
@@ -65,28 +65,28 @@ void SpheresApp::InitScene()
 
 			if (chooseMat < 0.8f)
 			{
-				m_scene.emplace_back(center, 0.2f, std::make_unique<Lambertian>(
+				m_scene.push_back(std::make_unique<Sphere>(center, 0.2f, std::make_unique<Lambertian>(
 					uniformDist(generator) * uniformDist(generator),
 					uniformDist(generator) * uniformDist(generator),
-					uniformDist(generator) * uniformDist(generator)));
+					uniformDist(generator) * uniformDist(generator))));
 			}
 			else if (chooseMat < 0.95f)
 			{
-				m_scene.emplace_back(center, 0.2f, std::make_unique<Metal>(
+				m_scene.push_back(std::make_unique<Sphere>(center, 0.2f, std::make_unique<Metal>(
 					0.5f * (1.f + uniformDist(generator)),
 					0.5f * (1.f + uniformDist(generator)),
-					0.5f * (1.f + uniformDist(generator))));
+					0.5f * (1.f + uniformDist(generator)))));
 			}
 			else
 			{
-				m_scene.emplace_back(center, 0.2f, std::make_unique<Dielectric>(1.5f));
+				m_scene.emplace_back(std::make_unique<Sphere>(center, 0.2f, std::make_unique<Dielectric>(1.5f)));
 			}
 		}
 	}
 
-	m_scene.emplace_back(XMVECTORF32{ 0, 1, 0 }, 1.f, std::make_unique<Dielectric>(1.5f));
-	m_scene.emplace_back(XMVECTORF32{ -4, 1, 0 }, 1.f, std::make_unique<Lambertian>(0.4f, 0.2f, 0.1f));
-	m_scene.emplace_back(XMVECTORF32{ 4, 1, 0 }, 1.f, std::make_unique<Metal>(0.7f, 0.6f, 0.5f));
+	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, 1, 0 }, 1.f, std::make_unique<Dielectric>(1.5f)));
+	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ -4, 1, 0 }, 1.f, std::make_unique<Lambertian>(0.4f, 0.2f, 0.1f)));
+	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 4, 1, 0 }, 1.f, std::make_unique<Metal>(0.7f, 0.6f, 0.5f)));
 }
 
 std::vector<std::pair<Ray, int>> SpheresApp::GenerateRays() const
@@ -185,9 +185,9 @@ std::optional<Payload> SpheresApp::GetClosestIntersection(const Ray& ray) const
 	XMVECTOR tClosest = XMVectorReplicate(FLT_MAX);
 	static const XMVECTORF32 bias{ 0.001, 0.001, 0.001 };
 
-	for (const Sphere& s : m_scene)
+	for (const auto& hitable : m_scene)
 	{
-		if (s.Intersect(ray, bias, tClosest, payload))
+		if (hitable->Intersect(ray, bias, tClosest, payload))
 		{
 			tClosest = payload.t;
 			hitAnything = true;
