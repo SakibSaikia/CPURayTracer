@@ -24,14 +24,29 @@ struct Ray
 
 struct AABB
 {
-	BoundingBox m_aabb;
+	BoundingBox m_box;
+
+	AABB() = default;
 	AABB(const XMFLOAT3& center, const XMFLOAT3& extents);
-	bool Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax) const;
+	bool Intersect(const Ray& ray) const;
 };
 
 struct Hitable
 {
-	virtual bool Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax, Payload& payload) const = 0;
+	virtual AABB GetAABB() const = 0;
+	virtual bool Intersect(const Ray& ray, Payload& payload) const = 0;
+};
+
+struct BvhNode : public Hitable
+{
+	AABB m_aabb;
+	std::unique_ptr<Hitable> m_left;
+	std::unique_ptr<Hitable> m_right;
+
+	using Iter = std::vector<std::unique_ptr<Hitable>>::iterator;
+	BvhNode(Iter begin, Iter end);
+	AABB GetAABB() const;
+	bool Intersect(const Ray& ray, Payload& payload) const override;
 };
 
 struct Sphere : public Hitable
@@ -42,7 +57,7 @@ struct Sphere : public Hitable
 
 	Sphere(const XMVECTOR& c, const float r, std::unique_ptr<class Material>&& mat) noexcept;
 	AABB GetAABB() const;
-	bool Intersect(const Ray& ray, const XMVECTOR tmin, const XMVECTOR tmax, Payload& payload) const override;
+	bool Intersect(const Ray& ray, Payload& payload) const override;
 };
 
 class Camera

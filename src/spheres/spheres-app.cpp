@@ -87,6 +87,9 @@ void SpheresApp::InitScene()
 	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, 1, 0 }, 1.f, std::make_unique<Dielectric>(1.5f)));
 	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ -4, 1, 0 }, 1.f, std::make_unique<Lambertian>(0.4f, 0.2f, 0.1f)));
 	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 4, 1, 0 }, 1.f, std::make_unique<Metal>(0.7f, 0.6f, 0.5f)));
+
+	// Construct BVH
+	m_bvh = std::make_unique<BvhNode>(m_scene.begin(), m_scene.end());
 }
 
 std::vector<std::pair<Ray, int>> SpheresApp::GenerateRays() const
@@ -181,20 +184,8 @@ size_t SpheresApp::DrawBitmap(HWND hWnd)
 std::optional<Payload> SpheresApp::GetClosestIntersection(const Ray& ray) const
 {
 	Payload payload{};
-	bool hitAnything = false;
-	XMVECTOR tClosest = XMVectorReplicate(FLT_MAX);
-	static const XMVECTORF32 bias{ 0.001, 0.001, 0.001 };
 
-	for (const auto& hitable : m_scene)
-	{
-		if (hitable->Intersect(ray, bias, tClosest, payload))
-		{
-			tClosest = payload.t;
-			hitAnything = true;
-		}
-	}
-
-	if (hitAnything)
+	if (m_bvh->Intersect(ray, payload))
 	{
 		return payload;
 	}

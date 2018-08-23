@@ -34,5 +34,6 @@ private:
 private:
 	std::unique_ptr<Camera> m_camera;
 	std::vector<std::unique_ptr<Hitable>> m_scene;
+	std::unique_ptr<BvhNode> m_bvh;
 	size_t m_sampleCount = 0;
 };
