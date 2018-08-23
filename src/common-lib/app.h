@@ -13,7 +13,6 @@ protected:
 	virtual void OnRender(HWND hWnd) = 0;
 	virtual int GetBackBufferWidth() const = 0;
 	virtual int GetBackBufferHeight() const = 0;
-	virtual std::wstring GetWindowName() const = 0;
 
 private:
 	void InitDirect2D(HWND hWnd) noexcept;

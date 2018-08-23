@@ -242,7 +242,7 @@ void SpheresApp::DisplayStats(HWND hWnd, const size_t rayCount, const double tim
 
 	const double mraysPerSecond = static_cast<double>(rayCount) / timeElapsed;
 
-	std::wstring windowText = AppSettings::k_windowCaption +
+	std::wstring windowText = std::wstring(L"Demo") +
 		L"\t | Mrays/s: " + std::to_wstring(mraysPerSecond) +
 		L"\t | spp: " + std::to_wstring(m_sampleCount) + 
 		L"\t | Time (seconds): " + std::to_wstring(totalTimeInSeconds);
@@ -258,9 +258,4 @@ int SpheresApp::GetBackBufferWidth() const
 int SpheresApp::GetBackBufferHeight() const
 {
 	return AppSettings::k_backbufferHeight;
-}
-
-std::wstring SpheresApp::GetWindowName() const
-{
-	return AppSettings::k_windowCaption;
 }

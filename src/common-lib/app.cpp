@@ -25,12 +25,12 @@ void RayTracingApp::Initialize(HINSTANCE instanceHandle, int show)
 	desc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	desc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW);
 	desc.lpszMenuName = nullptr;
-	desc.lpszClassName = GetWindowName().c_str();
+	desc.lpszClassName = L"Raytracing";
 	RegisterClass(&desc);
 
 	m_wndHandle = CreateWindow(
-		GetWindowName().c_str(),
-		GetWindowName().c_str(),
+		L"Raytracing",
+		L"Demo",
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
