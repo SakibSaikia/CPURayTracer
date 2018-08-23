@@ -23,7 +23,7 @@ bool Lambertian::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenu
 
 	// Project sample direction into ortho basis
 	const XMVECTOR scatterDir = dir.x * b1 + dir.y * b2 + dir.z * b3;
-	outRay = { hit.p, scatterDir };
+	outRay = { hit.p, XMVector3Normalize(scatterDir) };
 
 	return true;
 }
@@ -104,7 +104,7 @@ bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenu
 	}
 	else
 	{
-		outRay = { hit.p, refractDir };
+		outRay = { hit.p, XMVector3Normalize(refractDir) };
 		return true;
 	}
 }
