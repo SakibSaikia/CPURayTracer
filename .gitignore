@@ -4,3 +4,6 @@ x64/
 
 #Files
 *.user
+*.lib
+*.pdb
+*.ilk
