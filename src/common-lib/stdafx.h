@@ -29,3 +29,4 @@
 #include <wrl.h>
 
 using namespace DirectX;
+using namespace DirectX::PackedVector;

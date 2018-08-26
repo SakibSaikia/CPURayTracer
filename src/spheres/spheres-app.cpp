@@ -54,7 +54,7 @@ void SpheresApp::InitScene()
 
 	m_scene.reserve(500);
 
-	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, -1000, 0 }, 1000.f, std::make_unique<Lambertian>(0.5f, 0.5f, 0.5f)));
+	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, -1000, 0 }, 1000.f, std::make_unique<Lambertian>(XMCOLOR{ 0.5f, 0.5f, 0.5f, 1.f })));
 
 	for (int a = -11; a < 11; ++a)
 	{
@@ -66,16 +66,22 @@ void SpheresApp::InitScene()
 			if (chooseMat < 0.8f)
 			{
 				m_scene.push_back(std::make_unique<Sphere>(center, 0.2f, std::make_unique<Lambertian>(
+					XMCOLOR{
 					uniformDist(generator) * uniformDist(generator),
 					uniformDist(generator) * uniformDist(generator),
-					uniformDist(generator) * uniformDist(generator))));
+					uniformDist(generator) * uniformDist(generator),
+					1.f
+					})));
 			}
 			else if (chooseMat < 0.95f)
 			{
 				m_scene.push_back(std::make_unique<Sphere>(center, 0.2f, std::make_unique<Metal>(
+					XMCOLOR{
 					0.5f * (1.f + uniformDist(generator)),
 					0.5f * (1.f + uniformDist(generator)),
-					0.5f * (1.f + uniformDist(generator)))));
+					0.5f * (1.f + uniformDist(generator)),
+					1.f
+					})));
 			}
 			else
 			{
@@ -85,11 +91,14 @@ void SpheresApp::InitScene()
 	}
 
 	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, 1, 0 }, 1.f, std::make_unique<Dielectric>(1.5f)));
-	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ -4, 1, 0 }, 1.f, std::make_unique<Lambertian>(0.4f, 0.2f, 0.1f)));
-	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 4, 1, 0 }, 1.f, std::make_unique<Metal>(0.7f, 0.6f, 0.5f)));
+	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ -4, 1, 0 }, 1.f, std::make_unique<Lambertian>(XMCOLOR{ 0.4f, 0.2f, 0.1f, 1.f })));
+	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 4, 1, 0 }, 1.f, std::make_unique<Metal>(XMCOLOR{ 0.7f, 0.6f, 0.5f, 1.f })));
 
 	// Construct BVH
 	m_bvh = std::make_unique<BvhNode>(m_scene.begin(), m_scene.end());
+
+	// Sky
+	m_skyMaterial = std::make_unique<Emissive>(1.f, XMCOLOR{0.85f, 0.91f, 0.98f, 1.f});
 }
 
 std::vector<std::pair<Ray, int>> SpheresApp::GenerateRays() const
@@ -205,24 +214,20 @@ XMVECTOR SpheresApp::GetSceneColor(const Ray& ray, int depth) const
 
 		XMVECTOR attenuation;
 		Ray scatteredRay;
-		const bool validHit = hit.material->Scatter(ray, hit, attenuation, scatteredRay);
+		const bool isScattered = hit.material->Scatter(ray, hit, attenuation, scatteredRay);
 
-		if (depth < AppSettings::k_recursionDepth && validHit)
+		if (depth < AppSettings::k_recursionDepth && isScattered)
 		{
-			return attenuation * GetSceneColor(scatteredRay, depth + 1);
+			return hit.material->Emit() + attenuation * GetSceneColor(scatteredRay, depth + 1);
 		}
 		else
 		{
-			return XMVectorZero();
+			return hit.material->Emit();
 		}
 	}
 	else
 	{
-		// Sky gradient
-		const XMVECTOR rayDir = XMVector3Normalize(ray.direction);
-		const float t = 0.5f * (XMVectorGetY(rayDir) + 1.f);
-
-		return (1.f - t) * XMVECTORF32 { 1.f, 1.f, 1.f } +t * XMVECTORF32{ 0.5f, 0.7f, 1.f };
+		return m_skyMaterial->Emit();
 	}
 }
 

@@ -1,9 +1,9 @@
 #include "material.h"
 #include "quasi-random.h"
 
-Lambertian::Lambertian(const float r, const float g, const float b)
+Lambertian::Lambertian(const XMCOLOR& albedo)
 {
-	m_albedo = XMVectorSet(r, g, b, 1.f);
+	m_albedo = XMLoadColor(&albedo);
 }
 
 bool Lambertian::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
@@ -28,9 +28,9 @@ bool Lambertian::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenu
 	return true;
 }
 
-Metal::Metal(const float r, const float g, const float b)
+Metal::Metal(const XMCOLOR& albedo)
 {
-	m_albedo = XMVectorSet(r, g, b, 1.f);
+	m_albedo = XMLoadColor(&albedo);
 }
 
 bool Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
@@ -125,4 +125,17 @@ bool Dielectric::Refract(const XMVECTOR& v, const XMVECTOR& n, const XMVECTOR ni
 	{
 		return false;
 	}
+}
+
+Emissive::Emissive(float lux, const XMCOLOR& color)
+{
+	XMVECTOR vColor = XMLoadColor(&color);
+	XMVECTOR vLux = XMVectorReplicate(lux);
+
+	m_luminance = vColor * vLux;
+}
+
+XMVECTOR Emissive::Emit() const
+{
+	return m_luminance;
 }
