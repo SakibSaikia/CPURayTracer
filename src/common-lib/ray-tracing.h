@@ -59,18 +59,3 @@ struct Sphere : public Hitable
 	AABB GetAABB() const;
 	bool Intersect(const Ray& ray, Payload& payload) const override;
 };
-
-class Camera
-{
-public:
-	Camera(XMVECTOR origin, XMVECTOR lookAt, float verticalFOV, float aspectRatio, float focalLength, float aperture);
-	Ray GetRay(XMFLOAT2 uv, XMFLOAT2 offset) const;
-
-private:
-	DirectX::XMVECTOR m_origin;
-	DirectX::XMVECTOR m_x;
-	DirectX::XMVECTOR m_y;
-	DirectX::XMVECTOR m_lowerLeft;
-	float m_aperture;
-	float m_focalLength;
-};
