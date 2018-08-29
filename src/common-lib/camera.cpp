@@ -15,12 +15,14 @@ Camera::Camera(
 	const float halfHeight = std::tan(theta / 2.f);
 	const float halfWidth = aspectRatio * halfHeight;
 
+	// Use left-handed coordinates
 	const XMVECTORF32 up{ 0.f, 1.f, 0.f };
-	const XMVECTOR w = XMVector3Normalize(origin - lookAt);
+	const XMVECTOR w = XMVector3Normalize(lookAt - origin);
 	const XMVECTOR u = XMVector3Normalize(XMVector3Cross(up, w));
 	const XMVECTOR v = XMVector3Cross(w, u);
 
-	m_originImagePlane = origin - w;
+	const float imagePlaneOffset = 1.f;
+	m_originImagePlane = origin + imagePlaneOffset * w;
 	m_x = halfWidth * u;
 	m_y = halfHeight * v;
 }

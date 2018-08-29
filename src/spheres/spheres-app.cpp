@@ -34,7 +34,7 @@ void SpheresApp::OnRender(HWND hWnd)
 
 void SpheresApp::InitCamera()
 {
-	XMVECTOR camOrigin = XMVectorSet(12.f, 2.f, 2.5f, 1.f);
+	XMVECTOR camOrigin = XMVectorSet(12.f, 2.f, -2.5f, 1.f);
 	XMVECTOR camLookAt = XMVectorSet(0, 1, 0, 1.f);
 
 	m_camera = std::make_unique<Camera>(
