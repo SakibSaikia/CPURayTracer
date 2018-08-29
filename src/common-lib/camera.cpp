@@ -20,15 +20,20 @@ Camera::Camera(
 	const XMVECTOR u = XMVector3Normalize(XMVector3Cross(up, w));
 	const XMVECTOR v = XMVector3Cross(w, u);
 
-	m_lowerLeft = origin - halfWidth * u - halfHeight * v - w;
-	m_x = 2 * halfWidth * u;
-	m_y = 2 * halfHeight * v;
+	m_originImagePlane = origin - w;
+	m_x = halfWidth * u;
+	m_y = halfHeight * v;
 }
 
 Ray Camera::GetRay(XMFLOAT2 uv, XMFLOAT2 offset) const
 {
+	// Convert to [-1,1] range
+	XMFLOAT2 ndc;
+	ndc.x = 2.f * uv.x - 1.f;
+	ndc.y = 2.f * uv.y - 1.f;
+
 	// Use primary ray to determine focal point
-	const XMVECTOR p = m_lowerLeft + uv.x * m_x + uv.y * m_y;
+	const XMVECTOR p = m_originImagePlane + ndc.x * m_x + ndc.y * m_y;
 	const XMVECTOR focalPoint = m_origin + m_focalLength * XMVector3Normalize(p - m_origin);
 
 	// Secondary ray used for tracing

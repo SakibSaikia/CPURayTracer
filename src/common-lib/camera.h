@@ -13,7 +13,7 @@ private:
 	DirectX::XMVECTOR m_origin;
 	DirectX::XMVECTOR m_x;
 	DirectX::XMVECTOR m_y;
-	DirectX::XMVECTOR m_lowerLeft;
+	DirectX::XMVECTOR m_originImagePlane;
 	float m_aperture;
 	float m_focalLength;
 };
