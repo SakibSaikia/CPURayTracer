@@ -113,7 +113,7 @@ std::vector<std::pair<Ray, int>> SpheresApp::GenerateRays() const
 
 	int rayId = 0;
 
-	for (auto j = AppSettings::k_backbufferHeight - 1; j >= 0; --j)
+	for (auto j = 0; j < AppSettings::k_backbufferHeight; ++j)
 	{
 		for (auto i = 0; i < AppSettings::k_backbufferWidth; ++i)
 		{
