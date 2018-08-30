@@ -28,14 +28,14 @@ bool Lambertian::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenu
 	return true;
 }
 
-Metal::Metal(const XMCOLOR& albedo)
+Metal::Metal(const XMCOLOR& reflectance)
 {
-	m_albedo = XMLoadColor(&albedo);
+	m_reflectance = XMLoadColor(&reflectance);
 }
 
 bool Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
 {
-	outAttenuation = m_albedo;
+	outAttenuation = m_reflectance;
 
 	const XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
 

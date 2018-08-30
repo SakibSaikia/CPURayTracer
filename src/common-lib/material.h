@@ -25,12 +25,12 @@ private:
 class Metal : public Material
 {
 public:
-	Metal(const XMCOLOR& albedo);
+	Metal(const XMCOLOR& reflectance);
 	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
 	XMVECTOR Emit() const override { return XMVectorZero(); }
 
 private:
-	XMVECTOR m_albedo;
+	XMVECTOR m_reflectance;
 };
 
 class Dielectric : public Material
