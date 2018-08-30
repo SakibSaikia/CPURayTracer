@@ -10,16 +10,17 @@ public:
 	virtual XMVECTOR Emit() const = 0;
 };
 
-class Lambertian : public Material
+class Dielectric : public Material
 {
 public:
-	Lambertian(const XMCOLOR& albedo);
+	Dielectric(const XMCOLOR& albedo);
 	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
 	XMVECTOR Emit() const override { return XMVectorZero(); }
 
 private:
 	XMVECTOR m_albedo;
 	mutable std::atomic<uint64_t> m_sampleIndex = 0u;
+	mutable std::atomic<uint64_t> m_reflectionProbabilitySampleIndex = 0u;
 };
 
 class Metal : public Material
@@ -33,10 +34,10 @@ private:
 	XMVECTOR m_reflectance;
 };
 
-class Dielectric : public Material
+class Transparent : public Material
 {
 public:
-	Dielectric(float ior);
+	Transparent(float ior);
 	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
 	XMVECTOR Emit() const override { return XMVectorZero(); }
 

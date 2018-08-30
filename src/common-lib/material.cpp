@@ -1,31 +1,46 @@
 #include "material.h"
 #include "quasi-random.h"
 
-Lambertian::Lambertian(const XMCOLOR& albedo)
+Dielectric::Dielectric(const XMCOLOR& albedo)
 {
 	m_albedo = XMLoadColor(&albedo);
 }
 
-bool Lambertian::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
+bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
 {
-	outAttenuation = m_albedo;
+	/*XMVECTOR cosineIncidentAngle = XMVector3Dot(XMVector3Normalize(ray.direction), XMVector3Normalize(hit.normal));
+	XMVECTOR reflectionProbability = XMFresnelTerm(cosineIncidentAngle, XMVectorReplicate(1.3));
 
-	// Random sample direction in unit hemisphere
-	XMFLOAT3 dir = Random::HaltonSampleHemisphere(m_sampleIndex++, 5, 7);
+	const XMVECTOR rand = XMVectorReplicate(Random::HaltonSample(m_reflectionProbabilitySampleIndex++, 3));
 
-	// Orthonormal basis about hit normal
-	XMVECTOR b3 = XMVector3Normalize(hit.normal);
-	XMFLOAT3 temp;
-	XMStoreFloat3(&temp, b3);
-	XMVECTOR up = std::abs(temp.x) < 0.5f ? XMVECTORF32{ 1.0f, 0.0f, 0.0f } : XMVECTORF32{ 0.0f, 1.0f, 0.0f };
-	XMVECTOR b1 = XMVector3Cross(up, b3);
-	XMVECTOR b2 = XMVector3Cross(b3, b1);
+	if (XMVector3Greater(reflectionProbability, rand))
+	{
+		outAttenuation = XMVectorReplicate(0.04);
+		const XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
+		outRay = { hit.p, reflectDir };
+		return true;
+	}
+	else
+	{*/
+		outAttenuation = m_albedo;
 
-	// Project sample direction into ortho basis
-	const XMVECTOR scatterDir = dir.x * b1 + dir.y * b2 + dir.z * b3;
-	outRay = { hit.p, XMVector3Normalize(scatterDir) };
+		// Random sample direction in unit hemisphere
+		XMFLOAT3 dir = Random::HaltonSampleHemisphere(m_sampleIndex++, 5, 7);
 
-	return true;
+		// Orthonormal basis about hit normal
+		XMVECTOR b3 = XMVector3Normalize(hit.normal);
+		XMFLOAT3 temp;
+		XMStoreFloat3(&temp, b3);
+		XMVECTOR up = std::abs(temp.x) < 0.5f ? XMVECTORF32{ 1.0f, 0.0f, 0.0f } : XMVECTORF32{ 0.0f, 1.0f, 0.0f };
+		XMVECTOR b1 = XMVector3Cross(up, b3);
+		XMVECTOR b2 = XMVector3Cross(b3, b1);
+
+		// Project sample direction into ortho basis
+		const XMVECTOR scatterDir = dir.x * b1 + dir.y * b2 + dir.z * b3;
+		outRay = { hit.p, XMVector3Normalize(scatterDir) };
+
+		return true;
+	//}
 }
 
 Metal::Metal(const XMCOLOR& reflectance)
@@ -35,13 +50,13 @@ Metal::Metal(const XMCOLOR& reflectance)
 
 bool Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
 {
-	outAttenuation = m_reflectance;
-
-	const XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
-
-	if (XMVector3Greater(XMVector3Dot(reflectDir, hit.normal), XMVectorZero()))
+	if (XMVector3Greater(XMVector3Dot(-ray.direction, hit.normal), XMVectorZero()))
 	{
+		outAttenuation = m_reflectance;
+
+		const XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
 		outRay = { hit.p, reflectDir };
+
 		return true;
 	}
 	else
@@ -50,14 +65,14 @@ bool Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation
 	}
 }
 
-Dielectric::Dielectric(const float ior)
+Transparent::Transparent(const float ior)
 {
 	m_ior = XMVectorReplicate(ior);
 }
 
-bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const
+bool Transparent::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const
 {
-	// Attenuation of 1 for glass
+	// Attenuation of 1 for glass (no absorption)
 	outAttenuation = { 1.f, 1.f, 1.f };
 
 	XMVECTOR outwardNormal{};
@@ -70,14 +85,14 @@ bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenu
 		// Air-to-medium
 		outwardNormal = -hit.normal;
 		niOverNt = m_ior;
-		cosineIncidentAngle = m_ior * XMVector3Dot(ray.direction, hit.normal);
+		cosineIncidentAngle = XMVector3Dot(ray.direction, hit.normal);
 	}
 	else
 	{
 		// Medium-to-air
 		outwardNormal = hit.normal;
 		niOverNt = XMVectorReciprocalEst(m_ior);
-		cosineIncidentAngle = -XMVector3Dot(ray.direction, hit.normal);
+		cosineIncidentAngle = XMVector3Dot(ray.direction, -hit.normal);
 	}
 
 	XMVECTOR refractDir;
@@ -109,7 +124,7 @@ bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenu
 	}
 }
 
-bool Dielectric::Refract(const XMVECTOR& v, const XMVECTOR& n, const XMVECTOR niOverNt, XMVECTOR& outDir) const
+bool Transparent::Refract(const XMVECTOR& v, const XMVECTOR& n, const XMVECTOR niOverNt, XMVECTOR& outDir) const
 {
 	const XMVECTOR nDotV = XMVector3Dot(v, n);
 	static const XMVECTORF32 one{ 1.f, 1.f, 1.f };
