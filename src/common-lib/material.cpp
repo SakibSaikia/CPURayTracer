@@ -1,27 +1,35 @@
 #include "material.h"
 #include "quasi-random.h"
 
-Dielectric::Dielectric(const XMCOLOR& albedo)
+Dielectric::Dielectric(const XMCOLOR& albedo, const float ior)
 {
 	m_albedo = XMLoadColor(&albedo);
+	m_ior = XMVectorReplicate(ior);
 }
 
 bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
 {
-	/*XMVECTOR cosineIncidentAngle = XMVector3Dot(XMVector3Normalize(ray.direction), XMVector3Normalize(hit.normal));
-	XMVECTOR reflectionProbability = XMFresnelTerm(cosineIncidentAngle, XMVectorReplicate(1.3));
+	bool canReflect = XMVector3Greater(XMVector3Dot(-ray.direction, hit.normal), XMVectorZero());
+	bool willReflect = false;
 
-	const XMVECTOR rand = XMVectorReplicate(Random::HaltonSample(m_reflectionProbabilitySampleIndex++, 3));
-
-	if (XMVector3Greater(reflectionProbability, rand))
+	if (canReflect)
 	{
-		outAttenuation = XMVectorReplicate(0.04);
+		XMVECTOR cosineIncidentAngle = XMVector3Dot(XMVector3Normalize(-ray.direction), XMVector3Normalize(hit.normal));
+		XMVECTOR reflectionProbability = XMFresnelTerm(cosineIncidentAngle, XMVectorReplicate(1.3));
+		const XMVECTOR rand = XMVectorReplicate(Random::HaltonSample(m_reflectionProbabilitySampleIndex++, 3));
+
+		willReflect = XMVector3Greater(reflectionProbability, rand);
+	}
+
+	if (willReflect)
+	{
+		outAttenuation = XMVectorReplicate(1.f);
 		const XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
 		outRay = { hit.p, reflectDir };
 		return true;
 	}
 	else
-	{*/
+	{
 		outAttenuation = m_albedo;
 
 		// Random sample direction in unit hemisphere
@@ -40,7 +48,7 @@ bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenu
 		outRay = { hit.p, XMVector3Normalize(scatterDir) };
 
 		return true;
-	//}
+	}
 }
 
 Metal::Metal(const XMCOLOR& reflectance)

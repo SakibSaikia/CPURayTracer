@@ -13,12 +13,13 @@ public:
 class Dielectric : public Material
 {
 public:
-	Dielectric(const XMCOLOR& albedo);
+	Dielectric(const XMCOLOR& albedo, const float ior);
 	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
 	XMVECTOR Emit() const override { return XMVectorZero(); }
 
 private:
 	XMVECTOR m_albedo;
+	XMVECTOR m_ior;
 	mutable std::atomic<uint64_t> m_sampleIndex = 0u;
 	mutable std::atomic<uint64_t> m_reflectionProbabilitySampleIndex = 0u;
 };

@@ -54,7 +54,7 @@ void SpheresApp::InitScene()
 
 	m_scene.reserve(500);
 
-	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, -1000, 0 }, 1000.f, std::make_unique<Dielectric>(XMCOLOR{ 0.5f, 0.5f, 0.5f, 1.f })));
+	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, -1000, 0 }, 1000.f, std::make_unique<Dielectric>(XMCOLOR{ 0.5f, 0.5f, 0.5f, 1.f }, 1.3f)));
 
 	for (int a = -11; a < 11; ++a)
 	{
@@ -71,7 +71,7 @@ void SpheresApp::InitScene()
 					uniformDist(generator) * uniformDist(generator),
 					uniformDist(generator) * uniformDist(generator),
 					1.f
-					})));
+					}, 1.3f)));
 			}
 			else if (chooseMat < 0.95f)
 			{
@@ -91,7 +91,7 @@ void SpheresApp::InitScene()
 	}
 
 	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, 1, 0 }, 1.f, std::make_unique<Transparent>(1.5f)));
-	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ -4, 1, 0 }, 1.f, std::make_unique<Dielectric>(XMCOLOR{ 0.4f, 0.2f, 0.1f, 1.f })));
+	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ -4, 1, 0 }, 1.f, std::make_unique<Dielectric>(XMCOLOR{ 0.4f, 0.2f, 0.1f, 1.f }, 1.3f)));
 	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 4, 1, 0 }, 1.f, std::make_unique<Metal>(XMCOLOR{ 0.7f, 0.6f, 0.5f, 1.f })));
 
 	// Construct BVH
