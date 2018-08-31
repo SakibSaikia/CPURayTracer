@@ -42,9 +42,6 @@ public:
 	XMVECTOR Emit() const override { return XMVectorZero(); }
 
 private:
-	bool Refract(const XMVECTOR& v, const XMVECTOR& n, const XMVECTOR niOverNt, XMVECTOR& outDir) const;
-
-private:
 	XMVECTOR m_ior;
 	mutable std::atomic<uint64_t> m_sampleIndex = 0u;
 };

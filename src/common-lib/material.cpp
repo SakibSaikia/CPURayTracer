@@ -95,8 +95,9 @@ bool Transparent::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAtten
 		cosineIncidentAngle = XMVector3Dot(ray.direction, -hit.normal);
 	}
 
-	XMVECTOR refractDir;
-	const bool canRefract = Refract(ray.direction, outwardNormal, niOverNt, refractDir);
+	// Returns < 0.0f, 0.0f, 0.0f, undefined > if result is a total internal reflection
+	XMVECTOR refractDir = XMVector3RefractV(ray.direction, outwardNormal, niOverNt);
+	bool canRefract = XMVector3NotEqual(refractDir, XMVectorZero());
 
 	if (canRefract)
 	{
@@ -121,24 +122,6 @@ bool Transparent::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAtten
 	{
 		outRay = { hit.p, XMVector3Normalize(refractDir) };
 		return true;
-	}
-}
-
-bool Transparent::Refract(const XMVECTOR& v, const XMVECTOR& n, const XMVECTOR niOverNt, XMVECTOR& outDir) const
-{
-	const XMVECTOR nDotV = XMVector3Dot(v, n);
-	static const XMVECTORF32 one{ 1.f, 1.f, 1.f };
-
-	const XMVECTOR discriminant = one - niOverNt * niOverNt * (one - nDotV * nDotV);
-
-	if (XMVector3Greater(discriminant, XMVectorZero()))
-	{
-		outDir = niOverNt * (v - n * nDotV) - n * XMVectorSqrtEst(discriminant);
-		return true;
-	}
-	else
-	{
-		return false;
 	}
 }
 
