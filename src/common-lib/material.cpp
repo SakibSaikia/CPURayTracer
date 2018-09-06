@@ -7,7 +7,7 @@ Dielectric::Dielectric(const XMCOLOR& albedo, const float ior)
 	m_ior = XMVectorReplicate(ior);
 }
 
-bool Dielectric::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
+bool Dielectric::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
 {
 	bool canReflect = XMVector3Greater(XMVector3Dot(-ray.direction, hit.normal), XMVectorZero());
 	bool willReflect = false;
@@ -56,7 +56,7 @@ Metal::Metal(const XMCOLOR& reflectance)
 	m_reflectance = XMLoadColor(&reflectance);
 }
 
-bool Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
+bool Metal::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
 {
 	if (XMVector3Greater(XMVector3Dot(-ray.direction, hit.normal), XMVectorZero()))
 	{
@@ -78,7 +78,7 @@ Transparent::Transparent(const float ior)
 	m_ior = XMVectorReplicate(ior);
 }
 
-bool Transparent::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const
+bool Transparent::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const
 {
 	// Attenuation of 1 for glass (no absorption)
 	outAttenuation = { 1.f, 1.f, 1.f };

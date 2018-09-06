@@ -214,7 +214,7 @@ XMVECTOR SpheresApp::GetSceneColor(const Ray& ray, int depth) const
 
 		XMVECTOR attenuation;
 		Ray scatteredRay;
-		const bool isScattered = hit.material->Scatter(ray, hit, attenuation, scatteredRay);
+		const bool isScattered = hit.material->AbsorbAndScatter(ray, hit, attenuation, scatteredRay);
 
 		if (depth < AppSettings::k_recursionDepth && isScattered)
 		{

@@ -6,7 +6,7 @@
 class Material
 {
 public:
-	virtual bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const = 0;
+	virtual bool AbsorbAndScatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const = 0;
 	virtual XMVECTOR Emit() const = 0;
 };
 
@@ -14,7 +14,7 @@ class Dielectric : public Material
 {
 public:
 	Dielectric(const XMCOLOR& albedo, const float ior);
-	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
+	bool AbsorbAndScatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
 	XMVECTOR Emit() const override { return XMVectorZero(); }
 
 private:
@@ -28,7 +28,7 @@ class Metal : public Material
 {
 public:
 	Metal(const XMCOLOR& reflectance);
-	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
+	bool AbsorbAndScatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
 	XMVECTOR Emit() const override { return XMVectorZero(); }
 
 private:
@@ -39,7 +39,7 @@ class Transparent : public Material
 {
 public:
 	Transparent(float ior);
-	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
+	bool AbsorbAndScatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
 	XMVECTOR Emit() const override { return XMVectorZero(); }
 
 private:
@@ -51,7 +51,7 @@ class Emissive : public Material
 {
 public:
 	Emissive(float lux, const XMCOLOR& color);
-	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override { return false; }
+	bool AbsorbAndScatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override { return false; }
 	XMVECTOR Emit() const override;
 
 private:
