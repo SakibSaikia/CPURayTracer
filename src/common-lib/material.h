@@ -10,20 +10,6 @@ public:
 	virtual XMVECTOR Emit() const = 0;
 };
 
-class Dielectric : public Material
-{
-public:
-	Dielectric(const XMCOLOR& albedo, const float ior);
-	bool AbsorbAndScatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
-	XMVECTOR Emit() const override { return XMVectorZero(); }
-
-private:
-	XMVECTOR m_albedo;
-	XMVECTOR m_ior;
-	mutable std::atomic<uint64_t> m_sampleIndex = 0u;
-	mutable std::atomic<uint64_t> m_reflectionProbabilitySampleIndex = 0u;
-};
-
 class Metal : public Material
 {
 public:
@@ -35,10 +21,24 @@ private:
 	XMVECTOR m_reflectance;
 };
 
-class Transparent : public Material
+class DielectricOpaque : public Material
 {
 public:
-	Transparent(float ior);
+	DielectricOpaque(const XMCOLOR& albedo, const float ior);
+	bool AbsorbAndScatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
+	XMVECTOR Emit() const override { return XMVectorZero(); }
+
+private:
+	XMVECTOR m_albedo;
+	XMVECTOR m_ior;
+	mutable std::atomic<uint64_t> m_sampleIndex = 0u;
+	mutable std::atomic<uint64_t> m_reflectionProbabilitySampleIndex = 0u;
+};
+
+class DielectricTransparent : public Material
+{
+public:
+	DielectricTransparent(float ior);
 	bool AbsorbAndScatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
 	XMVECTOR Emit() const override { return XMVectorZero(); }
 

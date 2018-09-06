@@ -1,13 +1,13 @@
 #include "material.h"
 #include "quasi-random.h"
 
-Dielectric::Dielectric(const XMCOLOR& albedo, const float ior)
+DielectricOpaque::DielectricOpaque(const XMCOLOR& albedo, const float ior)
 {
 	m_albedo = XMLoadColor(&albedo);
 	m_ior = XMVectorReplicate(ior);
 }
 
-bool Dielectric::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
+bool DielectricOpaque::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
 {
 	bool canReflect = XMVector3Greater(XMVector3Dot(-ray.direction, hit.normal), XMVectorZero());
 	bool willReflect = false;
@@ -73,12 +73,12 @@ bool Metal::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVECTOR& outAt
 	}
 }
 
-Transparent::Transparent(const float ior)
+DielectricTransparent::DielectricTransparent(const float ior)
 {
 	m_ior = XMVectorReplicate(ior);
 }
 
-bool Transparent::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const
+bool DielectricTransparent::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const
 {
 	// Attenuation of 1 for glass (no absorption)
 	outAttenuation = { 1.f, 1.f, 1.f };
