@@ -9,45 +9,42 @@ DielectricOpaque::DielectricOpaque(const XMCOLOR& albedo, const float ior)
 
 bool DielectricOpaque::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
 {
-	bool canReflect = XMVector3Greater(XMVector3Dot(-ray.direction, hit.normal), XMVectorZero());
-	bool willReflect = false;
-
-	if (canReflect)
+	if (XMVector3Greater(XMVector3Dot(-ray.direction, hit.normal), XMVectorZero()))
 	{
 		XMVECTOR cosineIncidentAngle = XMVector3Dot(XMVector3Normalize(-ray.direction), XMVector3Normalize(hit.normal));
 		XMVECTOR reflectionProbability = XMFresnelTerm(cosineIncidentAngle, XMVectorReplicate(1.3));
 		const XMVECTOR rand = XMVectorReplicate(Random::HaltonSample(m_reflectionProbabilitySampleIndex++, 3));
 
-		willReflect = XMVector3Greater(reflectionProbability, rand);
-	}
+		bool bReflect = XMVector3Greater(reflectionProbability, rand);
 
-	if (willReflect)
-	{
-		outAttenuation = XMVectorReplicate(1.f);
-		const XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
-		outRay = { hit.p, reflectDir };
-		return true;
-	}
-	else
-	{
-		outAttenuation = m_albedo;
+		if (bReflect)
+		{
+			outAttenuation = XMVectorReplicate(1.f);
+			const XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
+			outRay = { hit.p, reflectDir };
+			return true;
+		}
+		else
+		{
+			outAttenuation = m_albedo;
 
-		// Random sample direction in unit hemisphere
-		XMFLOAT3 dir = Random::HaltonSampleHemisphere(m_sampleIndex++, 5, 7);
+			// Random sample direction in unit hemisphere
+			XMFLOAT3 dir = Random::HaltonSampleHemisphere(m_sampleIndex++, 5, 7);
 
-		// Orthonormal basis about hit normal
-		XMVECTOR b3 = XMVector3Normalize(hit.normal);
-		XMFLOAT3 temp;
-		XMStoreFloat3(&temp, b3);
-		XMVECTOR up = std::abs(temp.x) < 0.5f ? XMVECTORF32{ 1.0f, 0.0f, 0.0f } : XMVECTORF32{ 0.0f, 1.0f, 0.0f };
-		XMVECTOR b1 = XMVector3Cross(up, b3);
-		XMVECTOR b2 = XMVector3Cross(b3, b1);
+			// Orthonormal basis about hit normal
+			XMVECTOR b3 = XMVector3Normalize(hit.normal);
+			XMFLOAT3 temp;
+			XMStoreFloat3(&temp, b3);
+			XMVECTOR up = std::abs(temp.x) < 0.5f ? XMVECTORF32{ 1.0f, 0.0f, 0.0f } : XMVECTORF32{ 0.0f, 1.0f, 0.0f };
+			XMVECTOR b1 = XMVector3Cross(up, b3);
+			XMVECTOR b2 = XMVector3Cross(b3, b1);
 
-		// Project sample direction into ortho basis
-		const XMVECTOR scatterDir = dir.x * b1 + dir.y * b2 + dir.z * b3;
-		outRay = { hit.p, XMVector3Normalize(scatterDir) };
+			// Project sample direction into ortho basis
+			const XMVECTOR scatterDir = dir.x * b1 + dir.y * b2 + dir.z * b3;
+			outRay = { hit.p, XMVector3Normalize(scatterDir) };
 
-		return true;
+			return true;
+		}
 	}
 }
 
