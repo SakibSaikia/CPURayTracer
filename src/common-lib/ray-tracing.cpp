@@ -1,4 +1,4 @@
-#include "ray-tracing.h"
+﻿#include "ray-tracing.h"
 #include "quasi-random.h"
 #include "material.h"
 
@@ -23,6 +23,24 @@ Sphere::Sphere(const XMVECTOR& c, const float r, std::unique_ptr<Material>&& mat
 {
 }
 
+XMFLOAT2 Sphere::ComputeUV(const XMVECTOR& worldPos) const
+{
+	XMVECTOR unitSpherePos = (worldPos - center) / radius;
+
+	XMFLOAT3 pos;
+	XMStoreFloat3(&pos, unitSpherePos);
+
+	// Note that 'y' points up
+	float elevAngle = std::asin(pos.y);				// [-π/2, π/2]
+	float azimuthAngle = std::atan2(pos.z, pos.x);	// [-π, π]
+
+	// Convert to [0,1] range
+	XMFLOAT2 uv;
+	uv.x = 1.f - (azimuthAngle + XM_PI) / XM_2PI;
+	uv.y = (elevAngle + .5f * XM_PI) / XM_PI;
+
+	return uv;
+}
 
 bool Sphere::Intersect(const Ray& ray, Payload& payload) const
 {
@@ -43,8 +61,9 @@ bool Sphere::Intersect(const Ray& ray, Payload& payload) const
 		if (XMVector3Greater(t, bias))
 		{
 			payload.t = t;
-			payload.p = XMVectorMultiplyAdd(t, ray.direction, ray.origin);
-			payload.normal = (payload.p - center) / XMVectorReplicate(radius);
+			payload.pos = XMVectorMultiplyAdd(t, ray.direction, ray.origin);
+			payload.normal = (payload.pos - center) / XMVectorReplicate(radius);
+			payload.uv = ComputeUV(payload.pos);
 			payload.material = material.get();
 
 			return true;
@@ -55,8 +74,9 @@ bool Sphere::Intersect(const Ray& ray, Payload& payload) const
 		if (XMVector3Greater(t, bias))
 		{
 			payload.t = t;
-			payload.p = XMVectorMultiplyAdd(t, ray.direction, ray.origin);
-			payload.normal = (payload.p - center) / XMVectorReplicate(radius);
+			payload.pos = XMVectorMultiplyAdd(t, ray.direction, ray.origin);
+			payload.normal = (payload.pos - center) / XMVectorReplicate(radius);
+			payload.uv = ComputeUV(payload.pos);
 			payload.material = material.get();
 
 			return true;
@@ -189,5 +209,9 @@ bool BvhNode::Intersect(const Ray& ray, Payload& payload) const
 		{
 			return false;
 		}
+	}
+	else
+	{
+		return false;
 	}
 }

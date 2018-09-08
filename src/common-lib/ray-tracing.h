@@ -6,8 +6,9 @@ __declspec(align(16))
 struct Payload
 {
 	XMVECTOR t;
-	XMVECTOR p;
+	XMVECTOR pos;
 	XMVECTOR normal;
+	XMFLOAT2 uv;
 	class Material* material;
 };
 
@@ -58,4 +59,7 @@ struct Sphere : public Hitable
 	Sphere(const XMVECTOR& c, const float r, std::unique_ptr<class Material>&& mat) noexcept;
 	AABB GetAABB() const;
 	bool Intersect(const Ray& ray, Payload& payload) const override;
+
+private:
+	XMFLOAT2 ComputeUV(const XMVECTOR& worldPos) const;
 };

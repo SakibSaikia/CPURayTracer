@@ -1,9 +1,8 @@
 #include "material.h"
 #include "quasi-random.h"
 
-DielectricOpaque::DielectricOpaque(const XMCOLOR& albedo, const float ior)
+DielectricOpaque::DielectricOpaque(const Texture* albedo, const float ior) : m_albedo{ albedo }
 {
-	m_albedo = XMLoadColor(&albedo);
 	m_ior = XMVectorReplicate(ior);
 }
 
@@ -21,12 +20,12 @@ bool DielectricOpaque::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVE
 		{
 			outAttenuation = XMVectorReplicate(1.f);
 			const XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
-			outRay = { hit.p, reflectDir };
+			outRay = { hit.pos, reflectDir };
 			return true;
 		}
 		else
 		{
-			outAttenuation = m_albedo;
+			outAttenuation = m_albedo->Evaluate(hit.uv);
 
 			// Random sample direction in unit hemisphere
 			XMFLOAT3 dir = Random::HaltonSampleHemisphere(m_sampleIndex++, 5, 7);
@@ -41,26 +40,29 @@ bool DielectricOpaque::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVE
 
 			// Project sample direction into ortho basis
 			const XMVECTOR scatterDir = dir.x * b1 + dir.y * b2 + dir.z * b3;
-			outRay = { hit.p, XMVector3Normalize(scatterDir) };
+			outRay = { hit.pos, XMVector3Normalize(scatterDir) };
 
 			return true;
 		}
 	}
+	else
+	{
+		return false;
+	}
 }
 
-Metal::Metal(const XMCOLOR& reflectance)
+Metal::Metal(const Texture* reflectance) : m_reflectance{ reflectance }
 {
-	m_reflectance = XMLoadColor(&reflectance);
 }
 
 bool Metal::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
 {
 	if (XMVector3Greater(XMVector3Dot(-ray.direction, hit.normal), XMVectorZero()))
 	{
-		outAttenuation = m_reflectance;
+		outAttenuation = m_reflectance->Evaluate(hit.uv);
 
 		const XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
-		outRay = { hit.p, reflectDir };
+		outRay = { hit.pos, reflectDir };
 
 		return true;
 	}
@@ -120,25 +122,21 @@ bool DielectricTransparent::AbsorbAndScatter(const Ray& ray, const Payload& hit,
 	if (XMVector3Greater(reflectionProbability, rand))
 	{
 		const XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
-		outRay = { hit.p, reflectDir };
+		outRay = { hit.pos, reflectDir };
 		return true;
 	}
 	else
 	{
-		outRay = { hit.p, XMVector3Normalize(refractDir) };
+		outRay = { hit.pos, XMVector3Normalize(refractDir) };
 		return true;
 	}
 }
 
-Emissive::Emissive(float lux, const XMCOLOR& color)
+Emissive::Emissive(const Texture* luminance) : m_luminance{ luminance }
 {
-	XMVECTOR vColor = XMLoadColor(&color);
-	XMVECTOR vLux = XMVectorReplicate(lux);
-
-	m_luminance = vColor * vLux;
 }
 
-XMVECTOR Emissive::Emit() const
+XMVECTOR Emissive::Emit(XMFLOAT2 uv) const
 {
-	return m_luminance;
+	return m_luminance->Evaluate(uv);
 }

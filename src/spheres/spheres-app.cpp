@@ -54,7 +54,8 @@ void SpheresApp::InitScene()
 
 	m_scene.reserve(500);
 
-	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, -1000, 0 }, 1000.f, std::make_unique<DielectricOpaque>(XMCOLOR{ 0.5f, 0.5f, 0.5f, 1.f }, 1.3f)));
+	m_textures.push_back(std::make_unique<ConstTexture>(XMCOLOR{ 0.5f, 0.5f, 0.5f, 1.f }));
+	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, -1000, 0 }, 1000.f, std::make_unique<DielectricOpaque>(m_textures.back().get(), 1.3f)));
 
 	for (int a = -11; a < 11; ++a)
 	{
@@ -65,23 +66,28 @@ void SpheresApp::InitScene()
 
 			if (chooseMat < 0.8f)
 			{
-				m_scene.push_back(std::make_unique<Sphere>(center, 0.2f, std::make_unique<DielectricOpaque>(
+				m_textures.push_back(std::make_unique<ConstTexture>(
 					XMCOLOR{
-					uniformDist(generator) * uniformDist(generator),
-					uniformDist(generator) * uniformDist(generator),
-					uniformDist(generator) * uniformDist(generator),
-					1.f
-					}, 1.3f)));
+						uniformDist(generator) * uniformDist(generator),
+						uniformDist(generator) * uniformDist(generator),
+						uniformDist(generator) * uniformDist(generator),
+						1.f
+					}));
+
+				m_scene.push_back(std::make_unique<Sphere>(center, 0.2f, std::make_unique<DielectricOpaque>(m_textures.back().get(), 1.3f)));
 			}
 			else if (chooseMat < 0.95f)
 			{
-				m_scene.push_back(std::make_unique<Sphere>(center, 0.2f, std::make_unique<Metal>(
+				m_textures.push_back(std::make_unique<ConstTexture>(
 					XMCOLOR{
-					0.5f * (1.f + uniformDist(generator)),
-					0.5f * (1.f + uniformDist(generator)),
-					0.5f * (1.f + uniformDist(generator)),
-					1.f
-					})));
+						0.5f * (1.f + uniformDist(generator)),
+						0.5f * (1.f + uniformDist(generator)),
+						0.5f * (1.f + uniformDist(generator)),
+						1.f
+					}
+				));
+
+				m_scene.push_back(std::make_unique<Sphere>(center, 0.2f, std::make_unique<Metal>(m_textures.back().get())));
 			}
 			else
 			{
@@ -91,14 +97,19 @@ void SpheresApp::InitScene()
 	}
 
 	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, 1, 0 }, 1.f, std::make_unique<DielectricTransparent>(1.5f)));
-	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ -4, 1, 0 }, 1.f, std::make_unique<DielectricOpaque>(XMCOLOR{ 0.4f, 0.2f, 0.1f, 1.f }, 1.3f)));
-	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 4, 1, 0 }, 1.f, std::make_unique<Metal>(XMCOLOR{ 0.7f, 0.6f, 0.5f, 1.f })));
+
+	m_textures.push_back(std::make_unique<ConstTexture>(XMCOLOR{ 0.4f, 0.2f, 0.1f, 1.f }));
+	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ -4, 1, 0 }, 1.f, std::make_unique<DielectricOpaque>(m_textures.back().get(), 1.3f)));
+
+	m_textures.push_back(std::make_unique<ConstTexture>(XMCOLOR{ 0.7f, 0.6f, 0.5f, 1.f }));
+	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 4, 1, 0 }, 1.f, std::make_unique<Metal>(m_textures.back().get())));
 
 	// Construct BVH
 	m_bvh = std::make_unique<BvhNode>(m_scene.begin(), m_scene.end());
 
 	// Sky
-	m_skyMaterial = std::make_unique<Emissive>(1.f, XMCOLOR{0.85f, 0.91f, 0.98f, 1.f});
+	m_textures.push_back(std::make_unique<ConstTexture>(XMCOLOR{ 0.85f, 0.91f, 0.98f, 1.f }));
+	m_skyMaterial = std::make_unique<Emissive>(m_textures.back().get());
 }
 
 std::vector<std::pair<Ray, int>> SpheresApp::GenerateRays() const
@@ -218,16 +229,16 @@ XMVECTOR SpheresApp::GetSceneColor(const Ray& ray, int depth) const
 
 		if (depth < AppSettings::k_recursionDepth && isScattered)
 		{
-			return hit.material->Emit() + attenuation * GetSceneColor(scatteredRay, depth + 1);
+			return hit.material->Emit(hit.uv) + attenuation * GetSceneColor(scatteredRay, depth + 1);
 		}
 		else
 		{
-			return hit.material->Emit();
+			return hit.material->Emit(hit.uv);
 		}
 	}
 	else
 	{
-		return m_skyMaterial->Emit();
+		return m_skyMaterial->Emit(XMFLOAT2{});
 	}
 }
 
