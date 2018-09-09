@@ -25,19 +25,16 @@ Sphere::Sphere(const XMVECTOR& c, const float r, std::unique_ptr<Material>&& mat
 
 XMFLOAT2 Sphere::ComputeUV(const XMVECTOR& worldPos) const
 {
+	// Convert world pos to unit sphere
 	XMVECTOR unitSpherePos = (worldPos - center) / radius;
 
 	XMFLOAT3 pos;
 	XMStoreFloat3(&pos, unitSpherePos);
 
-	// Note that 'y' points up
-	float elevAngle = std::asin(pos.y);				// [-π/2, π/2]
-	float azimuthAngle = std::atan2(pos.z, pos.x);	// [-π, π]
-
-	// Convert to [0,1] range
+	// Convert to [0,1] range. 'y' point up.
 	XMFLOAT2 uv;
-	uv.x = 1.f - (azimuthAngle + XM_PI) / XM_2PI;
-	uv.y = (elevAngle + .5f * XM_PI) / XM_PI;
+	uv.x = 0.5f * pos.x + 0.5f;
+	uv.y = 0.5f * pos.z + 0.5f;
 
 	return uv;
 }
@@ -62,7 +59,7 @@ bool Sphere::Intersect(const Ray& ray, Payload& payload) const
 		{
 			payload.t = t;
 			payload.pos = XMVectorMultiplyAdd(t, ray.direction, ray.origin);
-			payload.normal = (payload.pos - center) / XMVectorReplicate(radius);
+			payload.normal = (payload.pos - center) / radius;
 			payload.uv = ComputeUV(payload.pos);
 			payload.material = material.get();
 
@@ -75,7 +72,7 @@ bool Sphere::Intersect(const Ray& ray, Payload& payload) const
 		{
 			payload.t = t;
 			payload.pos = XMVectorMultiplyAdd(t, ray.direction, ray.origin);
-			payload.normal = (payload.pos - center) / XMVectorReplicate(radius);
+			payload.normal = (payload.pos - center) / radius;
 			payload.uv = ComputeUV(payload.pos);
 			payload.material = material.get();
 

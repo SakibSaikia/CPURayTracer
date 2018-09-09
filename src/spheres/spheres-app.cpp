@@ -54,7 +54,7 @@ void SpheresApp::InitScene()
 
 	m_scene.reserve(500);
 
-	m_textures.push_back(std::make_unique<ConstTexture>(XMCOLOR{ 0.5f, 0.5f, 0.5f, 1.f }));
+	m_textures.push_back(std::make_unique<CheckerTexture>(XMCOLOR{ 0.9f, 0.9f, 0.9f, 1.f }, XMCOLOR{ 0.2f, 0.3f, 0.1f, 1.f }, 2500.f));
 	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, -1000, 0 }, 1000.f, std::make_unique<DielectricOpaque>(m_textures.back().get(), 1.3f)));
 
 	for (int a = -11; a < 11; ++a)
