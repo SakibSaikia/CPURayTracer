@@ -39,7 +39,7 @@ XMFLOAT3 Random::HaltonSampleHemisphere(uint64_t sampleIndex, uint32_t base1, ui
 	const float u2 = Random::HaltonSample(sampleIndex, base2);
 
 	const float r = std::sqrt(1.f - u1*u1);
-	const float phi = 2 * XM_PI * Random::HaltonSample(sampleIndex, base2);
+	const float phi = 2 * XM_PI * u2;
 
 	return XMFLOAT3(
 		r * std::cos(phi),
