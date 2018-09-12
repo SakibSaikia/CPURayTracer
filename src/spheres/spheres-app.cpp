@@ -44,6 +44,8 @@ void SpheresApp::InitCamera()
 		AppSettings::k_aspectRatio,
 		XMVectorGetX(XMVector3Length(camOrigin - camLookAt)),
 		AppSettings::k_aperture);
+
+	m_exposure = -13;
 }
 
 void SpheresApp::InitScene()
@@ -109,7 +111,7 @@ void SpheresApp::InitScene()
 
 	// Sky
 	m_textures.push_back(std::make_unique<ConstTexture>(XMCOLOR{ 0.85f, 0.91f, 0.98f, 1.f }));
-	m_skyMaterial = std::make_unique<Emissive>(m_textures.back().get());
+	m_skyMaterial = std::make_unique<Emissive>(8000.f, m_textures.back().get());
 }
 
 std::vector<std::pair<Ray, int>> SpheresApp::GenerateRays() const
@@ -153,14 +155,17 @@ size_t SpheresApp::DrawBitmap(HWND hWnd)
 	// Rays
 	std::vector<std::pair<Ray, int>> rayBuffer = GenerateRays();
 
+	// Exposure for the scene
+	const float exposureAdjustment = std::pow(2, m_exposure);
+
 	// Trace
 	std::for_each(
 		std::execution::par,
 		rayBuffer.cbegin(), rayBuffer.cend(), 
-		[this](const std::pair<Ray, int>& r)
+		[this, exposureAdjustment](const std::pair<Ray, int>& r)
 		{
 			XMVECTOR& colorVec = m_backbufferHdr[r.second];
-			colorVec += GetSceneColor(r.first, 0);
+			colorVec += GetSceneColor(r.first, 0) * exposureAdjustment;
 		});
 
 	// ACES tonemapping parameters

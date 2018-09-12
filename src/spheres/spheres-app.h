@@ -37,5 +37,6 @@ private:
 	std::vector<std::unique_ptr<Texture>> m_textures;
 	std::unique_ptr<BvhNode> m_bvh;
 	std::unique_ptr<Material> m_skyMaterial;
+	float m_exposure;
 	size_t m_sampleCount = 0;
 };

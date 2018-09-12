@@ -51,10 +51,11 @@ private:
 class Emissive : public Material
 {
 public:
-	Emissive(const Texture* luminance);
+	Emissive(const float luminance, const Texture* color);
 	bool AbsorbAndScatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override { return false; }
 	XMVECTOR Emit(XMFLOAT2 uv) const override;
 
 private:
-	const Texture* m_luminance;
+	const Texture* m_color;
+	float m_luminance;
 };

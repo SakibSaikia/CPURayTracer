@@ -132,11 +132,13 @@ bool DielectricTransparent::AbsorbAndScatter(const Ray& ray, const Payload& hit,
 	}
 }
 
-Emissive::Emissive(const Texture* luminance) : m_luminance{ luminance }
+Emissive::Emissive(const float luminance, const Texture* color) :
+	m_luminance{ luminance }, 
+	m_color { color }
 {
 }
 
 XMVECTOR Emissive::Emit(XMFLOAT2 uv) const
 {
-	return m_luminance->Evaluate(uv);
+	return m_luminance * m_color->Evaluate(uv);
 }
