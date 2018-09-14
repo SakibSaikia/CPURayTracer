@@ -31,7 +31,7 @@ bool DielectricOpaque::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& out
 			XMFLOAT3 dir = Random::HaltonSampleHemisphere(m_sampleIndex++, 5, 7);
 
 			// Orthonormal basis about hit normal
-			XMVECTOR b3 = XMVector3Normalize(hit.normal);
+			XMVECTOR b3 = hit.normal;
 			XMFLOAT3 temp;
 			XMStoreFloat3(&temp, b3);
 			XMVECTOR up = std::abs(temp.x) < 0.5f ? XMVECTORF32{ 1.0f, 0.0f, 0.0f } : XMVECTORF32{ 0.0f, 1.0f, 0.0f };
