@@ -1,6 +1,17 @@
 #include "material.h"
 #include "quasi-random.h"
 
+XMVECTOR Material::Shade(const Payload& payload, const std::vector<std::unique_ptr<Light>>& lights) const
+{
+	XMVECTOR directLighting = XMVectorZero();
+	for (const auto& light : lights)
+	{
+		directLighting += light->Shade(this, payload);
+	}
+
+	return directLighting;
+}
+
 DielectricOpaque::DielectricOpaque(const Texture* albedo, const float ior) : m_albedo{ albedo }
 {
 	m_ior = XMVectorReplicate(ior);
@@ -51,11 +62,6 @@ bool DielectricOpaque::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& out
 	}
 }
 
-XMVECTOR DielectricOpaque::Shade(const Payload& payload, const std::vector<std::unique_ptr<Light>>& lights) const
-{
-	return XMVectorZero();
-}
-
 Metal::Metal(const Texture* reflectance) : m_reflectance{ reflectance }
 {
 }
@@ -75,11 +81,6 @@ bool Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation
 	{
 		return false;
 	}
-}
-
-XMVECTOR Metal::Shade(const Payload& payload, const std::vector<std::unique_ptr<Light>>& lights) const
-{
-	return XMVectorZero();
 }
 
 DielectricTransparent::DielectricTransparent(const float ior)
@@ -140,11 +141,6 @@ bool DielectricTransparent::Scatter(const Ray& ray, const Payload& hit, XMVECTOR
 		outRay = { hit.pos, XMVector3Normalize(refractDir) };
 		return true;
 	}
-}
-
-XMVECTOR DielectricTransparent::Shade(const Payload& payload, const std::vector<std::unique_ptr<Light>>& lights) const
-{
-	return XMVectorZero();
 }
 
 Emissive::Emissive(const float luminance, const Texture* color) :

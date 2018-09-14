@@ -45,7 +45,7 @@ void SpheresApp::InitCamera()
 		XMVectorGetX(XMVector3Length(camOrigin - camLookAt)),
 		AppSettings::k_aperture);
 
-	m_exposure = -13;
+	m_exposure = -15;
 }
 
 void SpheresApp::InitScene()
@@ -56,9 +56,11 @@ void SpheresApp::InitScene()
 
 	m_scene.reserve(500);
 
+	// Floor
 	m_textures.push_back(std::make_unique<CheckerTexture>(XMCOLOR{ 0.9f, 0.9f, 0.9f, 1.f }, XMCOLOR{ 0.2f, 0.3f, 0.1f, 1.f }, 2500.f));
 	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, -1000, 0 }, 1000.f, std::make_unique<DielectricOpaque>(m_textures.back().get(), 1.3f)));
 
+	// Random small spheres
 	for (int a = -11; a < 11; ++a)
 	{
 		for (int b = -11; b < 11; ++b)
@@ -98,6 +100,7 @@ void SpheresApp::InitScene()
 		}
 	}
 
+	// Large spheres
 	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, 1, 0 }, 1.f, std::make_unique<DielectricTransparent>(1.5f)));
 
 	m_textures.push_back(std::make_unique<ConstTexture>(XMCOLOR{ 0.4f, 0.2f, 0.1f, 1.f }));
@@ -112,6 +115,14 @@ void SpheresApp::InitScene()
 	// Sky
 	m_textures.push_back(std::make_unique<ConstTexture>(XMCOLOR{ 0.85f, 0.91f, 0.98f, 1.f }));
 	m_skyMaterial = std::make_unique<Emissive>(8000.f, m_textures.back().get());
+
+	// Sun
+	auto lightOcclusionTest = [this](const Ray& ray) -> bool
+	{ 
+		Payload dummy{};
+		return m_bvh->Intersect(ray, dummy); 
+	};
+	m_lights.push_back(std::make_unique<DirectionalLight>(XMVECTORF32{ 1.f, 1.f, 1.f }, XMCOLOR{ 1.f, 0.97f, 0.88f, 1.f }, 40000.f, lightOcclusionTest));
 }
 
 std::vector<std::pair<Ray, int>> SpheresApp::GenerateRays() const
