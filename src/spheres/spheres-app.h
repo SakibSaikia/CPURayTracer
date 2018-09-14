@@ -27,7 +27,7 @@ private:
 	void DisplayStats(HWND hWnd, size_t rayCount, double timeElapsed) const;
 
 	std::optional<Payload> GetClosestIntersection(const Ray& ray) const;
-	XMVECTOR GetSceneColor(const Ray& ray, int depth) const;
+	XMVECTOR GetHitColor(const Ray& ray, int depth) const;
 
 	std::vector<std::pair<Ray, int>> GenerateRays() const;
 
@@ -35,6 +35,7 @@ private:
 	std::unique_ptr<Camera> m_camera;
 	std::vector<std::unique_ptr<Hitable>> m_scene;
 	std::vector<std::unique_ptr<Texture>> m_textures;
+	std::vector<std::unique_ptr<Light>> m_lights;
 	std::unique_ptr<BvhNode> m_bvh;
 	std::unique_ptr<Material> m_skyMaterial;
 	float m_exposure;

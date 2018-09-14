@@ -3,11 +3,13 @@
 #include "stdafx.h"
 #include "ray-tracing.h"
 #include "texture.h"
+#include "light.h"
 
 class Material
 {
 public:
-	virtual bool AbsorbAndScatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const = 0;
+	virtual bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const = 0;
+	virtual XMVECTOR Shade(const Payload& payload, const std::vector<std::unique_ptr<Light>>& lights) const = 0;
 	virtual XMVECTOR Emit(XMFLOAT2 uv) const = 0;
 };
 
@@ -15,7 +17,8 @@ class Metal : public Material
 {
 public:
 	Metal(const Texture* reflectance);
-	bool AbsorbAndScatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
+	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
+	XMVECTOR Shade(const Payload& payload, const std::vector<std::unique_ptr<Light>>& lights) const override;
 	XMVECTOR Emit(XMFLOAT2 uv) const override { return XMVectorZero(); }
 
 private:
@@ -26,7 +29,8 @@ class DielectricOpaque : public Material
 {
 public:
 	DielectricOpaque(const Texture* albedo, const float ior);
-	bool AbsorbAndScatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
+	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
+	XMVECTOR Shade(const Payload& payload, const std::vector<std::unique_ptr<Light>>& lights) const override;
 	XMVECTOR Emit(XMFLOAT2 uv) const override { return XMVectorZero(); }
 
 private:
@@ -40,7 +44,8 @@ class DielectricTransparent : public Material
 {
 public:
 	DielectricTransparent(float ior);
-	bool AbsorbAndScatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
+	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
+	XMVECTOR Shade(const Payload& payload, const std::vector<std::unique_ptr<Light>>& lights) const override;
 	XMVECTOR Emit(XMFLOAT2 uv) const override { return XMVectorZero(); }
 
 private:
@@ -52,7 +57,8 @@ class Emissive : public Material
 {
 public:
 	Emissive(const float luminance, const Texture* color);
-	bool AbsorbAndScatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override { return false; }
+	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override { return false; }
+	XMVECTOR Shade(const Payload& payload, const std::vector<std::unique_ptr<Light>>& lights) const override { return XMVectorZero(); };
 	XMVECTOR Emit(XMFLOAT2 uv) const override;
 
 private:

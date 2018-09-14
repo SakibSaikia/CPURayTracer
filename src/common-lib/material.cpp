@@ -6,7 +6,7 @@ DielectricOpaque::DielectricOpaque(const Texture* albedo, const float ior) : m_a
 	m_ior = XMVectorReplicate(ior);
 }
 
-bool DielectricOpaque::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
+bool DielectricOpaque::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const
 {
 	if (XMVector3Greater(XMVector3Dot(-ray.direction, hit.normal), XMVectorZero()))
 	{
@@ -51,11 +51,16 @@ bool DielectricOpaque::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVE
 	}
 }
 
+XMVECTOR DielectricOpaque::Shade(const Payload& payload, const std::vector<std::unique_ptr<Light>>& lights) const
+{
+	return XMVectorZero();
+}
+
 Metal::Metal(const Texture* reflectance) : m_reflectance{ reflectance }
 {
 }
 
-bool Metal::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const 
+bool Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const
 {
 	if (XMVector3Greater(XMVector3Dot(-ray.direction, hit.normal), XMVectorZero()))
 	{
@@ -72,12 +77,17 @@ bool Metal::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVECTOR& outAt
 	}
 }
 
+XMVECTOR Metal::Shade(const Payload& payload, const std::vector<std::unique_ptr<Light>>& lights) const
+{
+	return XMVectorZero();
+}
+
 DielectricTransparent::DielectricTransparent(const float ior)
 {
 	m_ior = XMVectorReplicate(ior);
 }
 
-bool DielectricTransparent::AbsorbAndScatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const
+bool DielectricTransparent::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const
 {
 	// Attenuation of 1 for glass (no absorption)
 	outAttenuation = { 1.f, 1.f, 1.f };
@@ -130,6 +140,11 @@ bool DielectricTransparent::AbsorbAndScatter(const Ray& ray, const Payload& hit,
 		outRay = { hit.pos, XMVector3Normalize(refractDir) };
 		return true;
 	}
+}
+
+XMVECTOR DielectricTransparent::Shade(const Payload& payload, const std::vector<std::unique_ptr<Light>>& lights) const
+{
+	return XMVectorZero();
 }
 
 Emissive::Emissive(const float luminance, const Texture* color) :

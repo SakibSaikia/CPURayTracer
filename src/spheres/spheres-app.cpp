@@ -165,7 +165,7 @@ size_t SpheresApp::DrawBitmap(HWND hWnd)
 		[this, exposureAdjustment](const std::pair<Ray, int>& r)
 		{
 			XMVECTOR& colorVec = m_backbufferHdr[r.second];
-			colorVec += GetSceneColor(r.first, 0) * exposureAdjustment;
+			colorVec += GetHitColor(r.first, 0) * exposureAdjustment;
 		});
 
 	// ACES tonemapping parameters
@@ -220,7 +220,7 @@ std::optional<Payload> SpheresApp::GetClosestIntersection(const Ray& ray) const
 	}
 }
 
-XMVECTOR SpheresApp::GetSceneColor(const Ray& ray, int depth) const
+XMVECTOR SpheresApp::GetHitColor(const Ray& ray, int depth) const
 {
 	static const XMVECTORF32 half{ 0.5f, 0.5f, 0.5f };
 
@@ -230,16 +230,12 @@ XMVECTOR SpheresApp::GetSceneColor(const Ray& ray, int depth) const
 
 		XMVECTOR attenuation;
 		Ray scatteredRay;
-		const bool isScattered = hit.material->AbsorbAndScatter(ray, hit, attenuation, scatteredRay);
+		const bool isScattered = hit.material->Scatter(ray, hit, attenuation, scatteredRay);
+		const bool recurse = depth < AppSettings::k_recursionDepth && isScattered;
 
-		if (depth < AppSettings::k_recursionDepth && isScattered)
-		{
-			return hit.material->Emit(hit.uv) + attenuation * GetSceneColor(scatteredRay, depth + 1);
-		}
-		else
-		{
-			return hit.material->Emit(hit.uv);
-		}
+		return hit.material->Emit(hit.uv) +
+			hit.material->Shade(hit, m_lights) +
+			(recurse ? attenuation * GetHitColor(scatteredRay, depth + 1) : XMVectorZero());
 	}
 	else
 	{
