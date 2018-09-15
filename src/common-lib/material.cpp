@@ -1,35 +1,36 @@
 #include "material.h"
 #include "quasi-random.h"
 
-XMVECTOR Material::Shade(const Payload& payload, const std::vector<std::unique_ptr<Light>>& lights) const
+XMVECTOR Material::Shade(const Payload& payload, const std::vector<std::unique_ptr<Light>>& lights, const XMVECTOR& viewOrigin) const
 {
-	XMVECTOR directLighting = XMVectorZero();
+	XMVECTOR directLighting = XM_Zero;
 	for (const auto& light : lights)
 	{
-		directLighting += light->Shade(this, payload);
+		directLighting += light->Shade(this, payload, viewOrigin);
 	}
 
 	return directLighting;
 }
 
-DielectricOpaque::DielectricOpaque(const Texture* albedo, const float ior) : m_albedo{ albedo }
+DielectricOpaque::DielectricOpaque(const Texture* albedo, const XMVECTOR& smoothness, const float ior) :
+	m_albedo{ albedo }, m_smoothness{ smoothness }
 {
 	m_ior = XMVectorReplicate(ior);
 }
 
 bool DielectricOpaque::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const
 {
-	if (XMVector3Greater(XMVector3Dot(-ray.direction, hit.normal), XMVectorZero()))
+	if (XMVector3Greater(XMVector3Dot(-ray.direction, hit.normal), XM_Zero))
 	{
 		XMVECTOR cosineIncidentAngle = XMVector3Dot(XMVector3Normalize(-ray.direction), XMVector3Normalize(hit.normal));
-		XMVECTOR reflectionProbability = XMFresnelTerm(cosineIncidentAngle, XMVectorReplicate(1.3));
+		XMVECTOR reflectionProbability = XMFresnelTerm(cosineIncidentAngle, m_ior);
 		const XMVECTOR rand = XMVectorReplicate(Random::HaltonSample(m_reflectionProbabilitySampleIndex++, 3));
 
 		bool bReflect = XMVector3Greater(reflectionProbability, rand);
 
 		if (bReflect)
 		{
-			outAttenuation = XMVectorReplicate(1.f);
+			outAttenuation = XM_One;
 			const XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
 			outRay = { hit.pos, reflectDir };
 			return true;
@@ -62,13 +63,14 @@ bool DielectricOpaque::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& out
 	}
 }
 
-Metal::Metal(const Texture* reflectance) : m_reflectance{ reflectance }
+Metal::Metal(const Texture* reflectance, const XMVECTOR& smoothness) :
+	m_reflectance{ reflectance }, m_smoothness{ smoothness }
 {
 }
 
 bool Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const
 {
-	if (XMVector3Greater(XMVector3Dot(-ray.direction, hit.normal), XMVectorZero()))
+	if (XMVector3Greater(XMVector3Dot(-ray.direction, hit.normal), XM_Zero))
 	{
 		outAttenuation = m_reflectance->Evaluate(hit.uv);
 
@@ -83,7 +85,8 @@ bool Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation
 	}
 }
 
-DielectricTransparent::DielectricTransparent(const float ior)
+DielectricTransparent::DielectricTransparent(const XMVECTOR& smoothness, const float ior) :
+	m_smoothness{ smoothness }
 {
 	m_ior = XMVectorReplicate(ior);
 }
@@ -98,7 +101,7 @@ bool DielectricTransparent::Scatter(const Ray& ray, const Payload& hit, XMVECTOR
 	XMVECTOR cosineIncidentAngle{};
 	XMVECTOR reflectionProbability{};
 
-	if (XMVector3Greater(XMVector3Dot(ray.direction, hit.normal), XMVectorZero()))
+	if (XMVector3Greater(XMVector3Dot(ray.direction, hit.normal), XM_Zero))
 	{
 		// Air-to-medium
 		outwardNormal = -hit.normal;
@@ -115,7 +118,7 @@ bool DielectricTransparent::Scatter(const Ray& ray, const Payload& hit, XMVECTOR
 
 	// Returns < 0.0f, 0.0f, 0.0f, undefined > if result is a total internal reflection
 	XMVECTOR refractDir = XMVector3RefractV(ray.direction, outwardNormal, niOverNt);
-	bool canRefract = XMVector3NotEqual(refractDir, XMVectorZero());
+	bool canRefract = XMVector3NotEqual(refractDir, XM_Zero);
 
 	if (canRefract)
 	{
@@ -125,7 +128,7 @@ bool DielectricTransparent::Scatter(const Ray& ray, const Payload& hit, XMVECTOR
 	else
 	{
 		// Total Internal Reflection
-		reflectionProbability = XMVectorReplicate(1.f);
+		reflectionProbability = XM_One;
 	}
 
 	const XMVECTOR rand = XMVectorReplicate(Random::HaltonSample(m_sampleIndex++, 7));

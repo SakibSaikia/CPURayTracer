@@ -51,7 +51,7 @@ bool Sphere::Intersect(const Ray& ray, Payload& payload) const
 
 	static const XMVECTORF32 bias{ 0.001, 0.001, 0.001 };
 
-	if (XMVector3Greater(discriminant, XMVectorZero()))
+	if (XMVector3Greater(discriminant, XM_Zero))
 	{
 		XMVECTOR t = (-b - XMVectorSqrt(discriminant)) / a;
 

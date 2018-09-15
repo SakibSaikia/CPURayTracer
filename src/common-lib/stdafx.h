@@ -30,3 +30,6 @@
 
 using namespace DirectX;
 using namespace DirectX::PackedVector;
+
+#define XM_One  XMVectorReplicate(1.f)
+#define XM_Zero XMVectorZero()

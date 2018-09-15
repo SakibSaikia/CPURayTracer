@@ -46,3 +46,8 @@ Ray Camera::GetRay(XMFLOAT2 uv, XMFLOAT2 offset) const
 
 	return Ray{ origin, XMVector3Normalize(focalPoint - origin) };
 }
+
+XMVECTOR Camera::GetOrigin() const
+{
+	return m_origin;
+}

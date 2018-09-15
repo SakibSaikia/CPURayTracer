@@ -6,14 +6,14 @@
 class Light
 {
 public:
-	virtual XMVECTOR Shade(const class Material* material, const Payload& payload) const = 0;
+	virtual XMVECTOR Shade(const class Material* material, const Payload& payload, const XMVECTOR& viewOrigin) const = 0;
 };
 
 class DirectionalLight : public Light
 {
 public:
 	DirectionalLight(const XMVECTOR& dir, const XMCOLOR& color, const float luminance, std::function<bool(const Ray& ray)> lightOcclusionTest);
-	XMVECTOR Shade(const class Material* material, const Payload& payload) const override;
+	XMVECTOR Shade(const class Material* material, const Payload& payload, const XMVECTOR& viewOrigin) const override;
 
 private:
 	XMVECTOR m_direction;

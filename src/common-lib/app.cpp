@@ -112,7 +112,7 @@ void RayTracingApp::InitDirect2D(HWND hWnd) noexcept
 void RayTracingApp::InitBuffers()
 {
 	m_backbufferHdr.resize(GetBackBufferWidth() * GetBackBufferHeight());
-	std::fill(m_backbufferHdr.begin(), m_backbufferHdr.end(), DirectX::XMVectorZero());
+	std::fill(m_backbufferHdr.begin(), m_backbufferHdr.end(), XM_Zero);
 
 	m_backbufferLdr.resize(GetBackBufferWidth() * GetBackBufferHeight());
 	std::fill(m_backbufferLdr.begin(), m_backbufferLdr.end(), 0);

@@ -8,12 +8,13 @@ class Camera
 public:
 	Camera(XMVECTOR origin, XMVECTOR lookAt, float verticalFOV, float aspectRatio, float focalLength, float aperture);
 	Ray GetRay(XMFLOAT2 uv, XMFLOAT2 offset) const;
+	XMVECTOR GetOrigin() const;
 
 private:
-	DirectX::XMVECTOR m_origin;
-	DirectX::XMVECTOR m_x;
-	DirectX::XMVECTOR m_y;
-	DirectX::XMVECTOR m_originImagePlane;
+	XMVECTOR m_origin;
+	XMVECTOR m_x;
+	XMVECTOR m_y;
+	XMVECTOR m_originImagePlane;
 	float m_aperture;
 	float m_focalLength;
 };
