@@ -152,7 +152,7 @@ Emissive::Emissive(const float luminance, const Texture* color) :
 {
 }
 
-XMVECTOR Emissive::Emit(XMFLOAT2 uv) const
+XMVECTOR Emissive::Emit(const Payload& payload) const
 {
-	return m_luminance * m_color->Evaluate(uv);
+	return m_luminance * m_color->Evaluate(payload.uv);
 }

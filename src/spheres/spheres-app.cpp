@@ -246,15 +246,15 @@ XMVECTOR SpheresApp::GetHitColor(const Ray& ray, int depth) const
 		XMVECTOR attenuation;
 		Ray scatteredRay;
 		const bool isScattered = hit.material->Scatter(ray, hit, attenuation, scatteredRay);
-		const bool recurse =  depth < AppSettings::k_recursionDepth && isScattered;
+		const bool recurse = depth < AppSettings::k_recursionDepth && isScattered;
 
-		return hit.material->Emit(hit.uv) +
+		return hit.material->Emit(hit) +
 			hit.material->Shade(hit, m_lights, m_camera->GetOrigin()) +
 			(recurse ? attenuation * GetHitColor(scatteredRay, depth + 1) : XM_Zero);
 	}
 	else
 	{
-		return m_skyMaterial->Emit(XMFLOAT2{});
+		return m_skyMaterial->Emit(Payload{});
 	}
 }
 

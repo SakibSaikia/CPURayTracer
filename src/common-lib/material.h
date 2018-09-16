@@ -10,7 +10,7 @@ class Material
 public:
 	virtual bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const = 0;
 	virtual XMVECTOR Shade(const Payload& payload, const std::vector<std::unique_ptr<Light>>& lights, const XMVECTOR& viewOrigin) const;
-	virtual XMVECTOR Emit(XMFLOAT2 uv) const = 0;
+	virtual XMVECTOR Emit(const Payload& payload) const = 0;
 
 	// Property getters
 	virtual XMVECTOR GetAlbedo(XMFLOAT2 uv) const = 0;
@@ -23,7 +23,7 @@ class Metal : public Material
 public:
 	Metal(const Texture* reflectance, const XMVECTOR& smoothness);
 	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
-	XMVECTOR Emit(XMFLOAT2 uv) const override { return XM_Zero; }
+	XMVECTOR Emit(const Payload& payload) const override { return XM_Zero; }
 	XMVECTOR GetAlbedo(XMFLOAT2 uv) const override { return XM_Zero; } // all refracted light gets absorbed
 	XMVECTOR GetReflectance(XMFLOAT2 uv) const override { return m_reflectance->Evaluate(uv); }
 	XMVECTOR GetSmoothness(XMFLOAT2 uv) const override { return m_smoothness; }
@@ -38,7 +38,7 @@ class DielectricOpaque : public Material
 public:
 	DielectricOpaque(const Texture* albedo, const XMVECTOR& smoothness, const float ior);
 	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
-	XMVECTOR Emit(XMFLOAT2 uv) const override { return XM_Zero; }
+	XMVECTOR Emit(const Payload& payload) const override { return XM_Zero; }
 	XMVECTOR GetAlbedo(XMFLOAT2 uv) const override { return m_albedo->Evaluate(uv); }
 	XMVECTOR GetReflectance(XMFLOAT2 uv) const override { return XMVECTORF32{ 0.04f, 0.04f, 0.04f, 1.f }; } // 4% reflectance for dielectrics
 	XMVECTOR GetSmoothness(XMFLOAT2 uv) const override { return m_smoothness; }
@@ -56,7 +56,7 @@ class DielectricTransparent : public Material
 public:
 	DielectricTransparent(const XMVECTOR& smoothness, float ior);
 	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
-	XMVECTOR Emit(XMFLOAT2 uv) const override { return XM_Zero; }
+	XMVECTOR Emit(const Payload& payload) const override { return XM_Zero; }
 	XMVECTOR GetAlbedo(XMFLOAT2 uv) const override { return XM_Zero; } // refracted light gets transmitted
 	XMVECTOR GetReflectance(XMFLOAT2 uv) const override { return XMVECTORF32{ 0.04f, 0.04f, 0.04f, 1.f }; } // 4% reflectance for dielectrics
 	XMVECTOR GetSmoothness(XMFLOAT2 uv) const override { return m_smoothness; }
@@ -71,7 +71,7 @@ class Emissive : public Material
 {
 public:
 	Emissive(const float luminance, const Texture* color);
-	XMVECTOR Emit(XMFLOAT2 uv) const override;
+	XMVECTOR Emit(const Payload& payload) const override;
 
 	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override { return false; }
 	XMVECTOR GetAlbedo(XMFLOAT2 uv) const override { return XM_Zero; }
