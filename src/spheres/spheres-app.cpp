@@ -237,8 +237,6 @@ std::optional<Payload> SpheresApp::GetClosestIntersection(const Ray& ray) const
 
 XMVECTOR SpheresApp::GetHitColor(const Ray& ray, int depth) const
 {
-	static const XMVECTORF32 half{ 0.5f, 0.5f, 0.5f };
-
 	if (auto hitInfo = GetClosestIntersection(ray))
 	{
 		const Payload& hit = hitInfo.value();
