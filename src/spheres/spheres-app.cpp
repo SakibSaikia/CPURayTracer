@@ -45,7 +45,7 @@ void SpheresApp::InitCamera()
 		XMVectorGetX(XMVector3Length(camOrigin - camLookAt)),
 		AppSettings::k_aperture);
 
-	m_exposure = -15;
+	m_exposure = -13;
 }
 
 void SpheresApp::InitScene()
@@ -57,7 +57,7 @@ void SpheresApp::InitScene()
 	m_scene.reserve(500);
 
 	// Floor
-	m_textures.push_back(std::make_unique<CheckerTexture>(XMCOLOR{ 0.9f, 0.9f, 0.9f, 1.f }, XMCOLOR{ 0.2f, 0.3f, 0.1f, 1.f }, 2500.f));
+	m_textures.push_back(std::make_unique<ConstTexture>(XMCOLOR{ 0.5f, 0.5f, 0.5f, 1.f }));
 	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, -1000, 0 }, 1000.f, std::make_unique<DielectricOpaque>(m_textures.back().get(), XMVectorReplicate(16.f),  1.3f)));
 
 	// Random small spheres
@@ -247,7 +247,7 @@ XMVECTOR SpheresApp::GetHitColor(const Ray& ray, int depth) const
 		const bool recurse = depth < AppSettings::k_recursionDepth && isScattered;
 
 		return hit.material->Emit(hit) +
-			hit.material->Shade(hit, m_lights, m_camera->GetOrigin()) +
+			/*hit.material->Shade(hit, m_lights, m_camera->GetOrigin()) +*/
 			(recurse ? attenuation * GetHitColor(scatteredRay, depth + 1) : XM_Zero);
 	}
 	else

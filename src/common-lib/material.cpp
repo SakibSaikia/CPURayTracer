@@ -26,7 +26,7 @@ bool DielectricOpaque::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& out
 		XMVECTOR reflectionProbability = XMFresnelTerm(cosineIncidentAngle, m_ior);
 		const XMVECTOR rand = XMVectorReplicate(Random::HaltonSample(m_reflectionProbabilitySampleIndex++, 3));
 
-		bool bReflect = XMVector3Greater(reflectionProbability, rand);
+		bool bReflect = false;// XMVector3Greater(reflectionProbability, rand);
 
 		if (bReflect)
 		{
