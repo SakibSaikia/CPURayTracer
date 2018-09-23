@@ -58,7 +58,7 @@ void SpheresApp::InitScene()
 
 	// Floor
 	m_textures.push_back(std::make_unique<CheckerTexture>(XMCOLOR{ 0.9f, 0.9f, 0.9f, 1.f }, XMCOLOR{ 0.2f, 0.3f, 0.1f, 1.f }, 2500.f));
-	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, -1000, 0 }, 1000.f, std::make_unique<DielectricOpaque>(m_textures.back().get(), XMVectorReplicate(16.f),  1.3f)));
+	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, -1000, 0 }, 1000.f, std::make_unique<DielectricOpaque>(m_textures.back().get(), XMVectorReplicate(16.f))));
 
 	// Random small spheres
 	for (int a = -11; a < 11; ++a)
@@ -80,7 +80,7 @@ void SpheresApp::InitScene()
 
 				float smoothness = 8.f * (4.f + uniformDist(generator));
 
-				m_scene.push_back(std::make_unique<Sphere>(center, 0.2f, std::make_unique<DielectricOpaque>(m_textures.back().get(), XMVectorReplicate(smoothness), 1.3f)));
+				m_scene.push_back(std::make_unique<Sphere>(center, 0.2f, std::make_unique<DielectricOpaque>(m_textures.back().get(), XMVectorReplicate(smoothness))));
 			}
 			else if (chooseMat < 0.95f)
 			{
@@ -108,7 +108,7 @@ void SpheresApp::InitScene()
 	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 0, 1, 0 }, 1.f, std::make_unique<DielectricTransparent>(XMVectorReplicate(16.f), 1.5f)));
 
 	m_textures.push_back(std::make_unique<ConstTexture>(XMCOLOR{ 0.4f, 0.2f, 0.1f, 1.f }));
-	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ -4, 1, 0 }, 1.f, std::make_unique<DielectricOpaque>(m_textures.back().get(), XMVectorReplicate(16.f), 1.3f)));
+	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ -4, 1, 0 }, 1.f, std::make_unique<DielectricOpaque>(m_textures.back().get(), XMVectorReplicate(16.f))));
 
 	m_textures.push_back(std::make_unique<ConstTexture>(XMCOLOR{ 0.7f, 0.6f, 0.5f, 1.f }));
 	m_scene.push_back(std::make_unique<Sphere>(XMVECTORF32{ 4, 1, 0 }, 1.f, std::make_unique<Metal>(m_textures.back().get(), XM_Zero)));

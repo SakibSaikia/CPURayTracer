@@ -12,21 +12,22 @@ XMVECTOR Material::Shade(const Payload& payload, const std::vector<std::unique_p
 	return directLighting;
 }
 
-DielectricOpaque::DielectricOpaque(const Texture* albedo, const XMVECTOR& smoothness, const float ior) :
+DielectricOpaque::DielectricOpaque(const Texture* albedo, const XMVECTOR& smoothness) :
 	m_albedo{ albedo }, m_smoothness{ smoothness }
 {
-	m_ior = XMVectorReplicate(ior);
 }
 
 bool DielectricOpaque::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation, Ray& outRay) const
 {
 	if (XMVector3Greater(XMVector3Dot(-ray.direction, hit.normal), XM_Zero))
 	{
-		XMVECTOR cosineIncidentAngle = XMVector3Dot(XMVector3Normalize(-ray.direction), XMVector3Normalize(hit.normal));
-		XMVECTOR reflectionProbability = XMFresnelTerm(cosineIncidentAngle, m_ior);
+		// Use ray direction to calculate incident angle. This is same as view direction for primary rays.
+		XMVECTOR f0 = GetReflectance(hit.uv);
+		XMVECTOR nDotV = XMVectorSaturate(XMVector3Dot(-ray.direction, hit.normal));
+		XMVECTOR reflectance = f0 + (XM_One - f0) * XMVectorPow(XM_One - nDotV, XMVectorReplicate(5.f));
+		
 		const XMVECTOR rand = XMVectorReplicate(Random::HaltonSample(m_reflectionProbabilitySampleIndex++, 3));
-
-		bool bReflect = XMVector3Greater(reflectionProbability, rand);
+		bool bReflect = XMVector3Greater(reflectance, rand);
 
 		if (bReflect)
 		{
@@ -72,12 +73,28 @@ bool Metal::Scatter(const Ray& ray, const Payload& hit, XMVECTOR& outAttenuation
 {
 	if (XMVector3Greater(XMVector3Dot(-ray.direction, hit.normal), XM_Zero))
 	{
-		outAttenuation = m_reflectance->Evaluate(hit.uv);
+		// Use ray direction to calculate incident angle. This is same as view direction for primary rays.
+		XMVECTOR f0 = GetReflectance(hit.uv);
+		XMVECTOR nDotV = XMVectorSaturate(XMVector3Dot(-ray.direction, hit.normal));
+		XMVECTOR reflectance = f0 + (XM_One - f0) * XMVectorPow(XM_One - nDotV, XMVectorReplicate(5.f));
 
-		const XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
-		outRay = { hit.pos, reflectDir };
+		uint32_t bReflect;
+		const XMVECTOR rand = XMVectorReplicate(Random::HaltonSample(m_reflectionProbabilitySampleIndex++, 3));
+		XMVectorGreaterR(&bReflect, reflectance, rand);
 
-		return true;
+		if (XMComparisonAnyTrue(bReflect))
+		{
+			outAttenuation = m_reflectance->Evaluate(hit.uv);
+
+			const XMVECTOR reflectDir = XMVector3Normalize(XMVector3Reflect(ray.direction, hit.normal));
+			outRay = { hit.pos, reflectDir };
+
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	else
 	{

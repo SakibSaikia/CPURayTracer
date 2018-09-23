@@ -31,12 +31,13 @@ public:
 private:
 	const Texture* m_reflectance;
 	XMVECTOR m_smoothness;
+	mutable std::atomic<uint64_t> m_reflectionProbabilitySampleIndex = 0u;
 };
 
 class DielectricOpaque : public Material
 {
 public:
-	DielectricOpaque(const Texture* albedo, const XMVECTOR& smoothness, const float ior);
+	DielectricOpaque(const Texture* albedo, const XMVECTOR& smoothness);
 	bool Scatter(const Ray& ray, const Payload& payload, XMVECTOR& outAttenuation, Ray& outRay) const override;
 	XMVECTOR Emit(const Payload& payload) const override { return XM_Zero; }
 	XMVECTOR GetAlbedo(XMFLOAT2 uv) const override { return m_albedo->Evaluate(uv); }
@@ -46,7 +47,6 @@ public:
 private:
 	const Texture* m_albedo;
 	XMVECTOR m_smoothness;
-	XMVECTOR m_ior;
 	mutable std::atomic<uint64_t> m_sampleIndex = 0u;
 	mutable std::atomic<uint64_t> m_reflectionProbabilitySampleIndex = 0u;
 };
