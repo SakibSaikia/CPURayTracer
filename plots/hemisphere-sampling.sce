@@ -18,7 +18,7 @@ function x = azimuth(val)
 endfunction
 
 function x = elevation(val)
-    x = (2 .* val - 1) .* %pi .* 0.5
+    x = val .* %pi .* 0.5
 endfunction
 
 function x = lds(sample, base)
@@ -38,11 +38,11 @@ seq2 = lds([1:1:100], 3);
 theta = elevation(seq1)
 phi = azimuth(seq2)
 
-[xx,yy,zz]=eval3dp(unitsphere,linspace(-%pi/2,%pi/2,40),linspace(0,%pi*2,40));
+[xx,yy,zz]=eval3dp(unitsphere,linspace(0,%pi/2,40),linspace(0,%pi*2,40));
 clf();
 plot3d(xx,yy,zz)
 [px1, py1, pz1] = unitsphere(theta, phi);
-//scatter3(px1, py1, pz1, 10, 'scilab red2', 'fill')
+//scatter3(1.01*px1, 1.01*py1, 1.01*pz1, 10, 'scilab red2', 'fill')
 
 [px2, py2, pz2] = unitsphere2(phi, seq1);
-scatter3(px2, py2, pz2, 10, 'scilab red2', 'fill')
+scatter3(1.01*px2, 1.01*py2, 1.01*pz2, 10, 'scilab red2', 'fill')
