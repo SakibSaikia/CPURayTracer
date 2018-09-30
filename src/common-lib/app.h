@@ -23,8 +23,8 @@ protected:
 	Microsoft::WRL::ComPtr<ID2D1Bitmap> m_backbufferBitmap;
 	Microsoft::WRL::ComPtr<ID2D1HwndRenderTarget> m_renderTarget;
 
-	std::vector<DirectX::XMVECTOR> m_backbufferHdr;
-	std::vector<DirectX::PackedVector::XMCOLOR> m_backbufferLdr;
+	std::vector<XMVECTOR> m_backbufferHdr;
+	std::vector<PackedVector::XMCOLOR> m_backbufferLdr;
 
 	HWND m_wndHandle;
 };

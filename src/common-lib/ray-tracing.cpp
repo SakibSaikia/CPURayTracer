@@ -158,7 +158,7 @@ BvhNode::BvhNode(BvhNode::Iter begin, BvhNode::Iter end)
 	// Merged AABB
 	if (m_right != nullptr)
 	{
-		DirectX::BoundingBox::CreateMerged(m_aabb.m_box, m_left->GetAABB().m_box, m_right->GetAABB().m_box);
+		BoundingBox::CreateMerged(m_aabb.m_box, m_left->GetAABB().m_box, m_right->GetAABB().m_box);
 	}
 	else
 	{

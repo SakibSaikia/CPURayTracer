@@ -197,7 +197,7 @@ size_t SpheresApp::DrawBitmap(HWND hWnd)
 		std::execution::par,
 		m_backbufferHdr.cbegin(), m_backbufferHdr.cend(),
 		m_backbufferLdr.begin(),
-		[n = m_sampleCount](const DirectX::XMVECTOR& hdrColor) -> XMCOLOR
+		[n = m_sampleCount](const XMVECTOR& hdrColor) -> XMCOLOR
 		{
 			XMVECTOR color = hdrColor / static_cast<float>(n);
 
